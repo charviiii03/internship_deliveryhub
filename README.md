@@ -81,17 +81,13 @@ python app.py
 ## Valid Input Test
 
 ```bash
-curl -X POST http://127.0.0.1:5000/validate \
--H "Content-Type: application/json" \
--d '{"text":"Hello123"}'
+curl -X POST http://127.0.0.1:5000/validate \-H "Content-Type: application/json" \-d '{"text":"Hello123"}'
 ```
 
 ## Invalid Input Test
 
 ```bash
-curl -X POST http://127.0.0.1:5000/validate \
--H "Content-Type: application/json" \
--d '{"text":"Hello@123"}'
+curl -X POST http://127.0.0.1:5000/validate \-H "Content-Type: application/json" \-d '{"text":"Hello@123"}'
 ```
 
 ---
