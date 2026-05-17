@@ -2,38 +2,110 @@
 
 A simple Flask API that validates text input.
 
-The API returns:
-- valid status for normal text
-- invalid status if special characters are present
+The API:
+- returns valid if the text has no special characters
+- returns invalid if special characters are present
 
-## API Endpoint
+---
+
+# API Endpoint
 
 POST /validate
 
-##Example Valid Input
-it is valid if no special characters say, it can contain spaces, numbers, characters 
+---
+
+# Example Valid Input
+
+Valid because it contains only letters, numbers, and spaces.
+
 ```json
 {
   "text": "Hello World 123"
 }
+```
 
-##Example invalid input 
-//invalid if there are special characters - @
+Example response:
+
+```json
+{
+  "status": "valid"
+}
+```
+
+
+# Example Invalid Input
+
+Invalid because it contains a special character (`@`).
+
+```json
 {
   "text": "Hello@World"
 }
+```
 
-to do this: installing dependencies etc
-1) activate virtual environment: source .venv/bin/activate
-2) pip install -r requirements.txt
-3) run flask app: python app.py/python3 app.py 
+Example response:
 
-in new terminal:
-- to test valid input: 
-//curl -X POST http://127.0.0.1:5000/validate \-H "Content-Type: application/json" \ -d '{"text":"Hello123"}'
+```json
+{
+  "status": "invalid",
+  "reason": "Special characters found"
+}
+```
 
-- to test invalid input:
-//curl -X POST http://127.0.0.1:5000/validate \-H "Content-Type: application/json" \ -d '{"text":"Hello@123"}'
+---
 
-previous terminal: control + c
+# Project Setup
+
+## 1. Activate virtual environment
+
+```bash
+source .venv/bin/activate
+```
+
+## 2. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+## 3. Run Flask app
+
+```bash
+python app.py
+```
+
+---
+
+# Testing the API
+
+## Valid Input Test
+
+```bash
+curl -X POST http://127.0.0.1:5000/validate \
+-H "Content-Type: application/json" \
+-d '{"text":"Hello123"}'
+```
+
+## Invalid Input Test
+
+```bash
+curl -X POST http://127.0.0.1:5000/validate \
+-H "Content-Type: application/json" \
+-d '{"text":"Hello@123"}'
+```
+
+---
+
+# Run Automated Tests
+
+Stop the Flask server first using:
+
+```text
+Control + C
+```
+
+Then run:
+
+```bash
 pytest
+```
