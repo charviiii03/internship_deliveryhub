@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify
-import re
 import uuid
 import json
 from datetime import datetime
@@ -17,9 +16,11 @@ def generate_label():
     required_fields = [
         "from_name",
         "from_address",
+        "from_country_code",
         "from_phone",
         "to_name",
         "to_address",
+        "to_country_code",
         "to_phone",
         "service"
     ]
@@ -33,20 +34,31 @@ def generate_label():
             return_code = 400
             break
     else:
-        response_json = {
-            "status": "valid",
-            "requestid": requestid,
-            "from": "USA",
-            "from_address": data["from_address"],
-            "sender_name": data["from_name"],
-            "sender_phone": "+1 " + data["from_phone"],
-            "to": "India",
-            "to_address": data["to_address"],
-            "receiver_name": data["to_name"],
-            "receiver_phone": "+91 " + data["to_phone"],
-            "service": data["service"]
-        }
-        return_code = 200
+        valid_country_codes = ["+1", "+91"]
+
+        if data.get("from_country_code") not in valid_country_codes:
+            response_json = {
+                "status": "invalid",
+                "reason": "invalid from country code"
+            }
+            return_code = 400
+
+        elif data.get("to_country_code") not in valid_country_codes:
+            response_json = {
+                "status": "invalid",
+                "reason": "invalid to country code"
+            }
+            return_code = 400
+
+        else:
+            response_json = {
+                "status": "valid",
+                "requestid": requestid,
+                "from_country_code": data["from_country_code"],
+                "to_country_code": data["to_country_code"],
+                "service": data["service"]
+            }
+            return_code = 200
 
     connection = get_db_connection()
     cursor = connection.cursor()
@@ -82,4 +94,3 @@ def generate_label():
 
 if __name__ == "__main__":
     app.run(debug=True)
-    
