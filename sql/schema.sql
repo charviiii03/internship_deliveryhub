@@ -1,5 +1,7 @@
 CREATE TABLE IF NOT EXISTS customers (
     customer_id INT AUTO_INCREMENT PRIMARY KEY,
+    -- Varchar 150 is way too much for a name. Most full names are less than 20 characters.
+    -- We can keep it at 50 to be safe since 150 is excessive and can lead to wasted storage.
     full_name VARCHAR(150) NOT NULL,
     phone_number VARCHAR(20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -7,14 +9,18 @@ CREATE TABLE IF NOT EXISTS customers (
 CREATE TABLE IF NOT EXISTS addresses (
     address_id INT AUTO_INCREMENT PRIMARY KEY,
 
+    -- One address line is not enough. Most websites have two fields. We can have address_line1 and address_line2. 
+    --This allows for more flexibility in capturing addresses, especially for international shipments where the format can vary significantly.
     address_line TEXT NOT NULL,
 
     city VARCHAR(100),
-
+    -- state is a reserved word in sql. so check line 16 again. I don't know if it will function properly. 
     state VARCHAR(100),
+    -- need one more for state code, similar to country code.
 
     country VARCHAR(100),
 
+    -- Remove country code. It is not necessary for an international Address. We can just use the country name. If we need to standardize it, we can create a separate table for countries and reference it here.
     country_code VARCHAR(5) NOT NULL,
 
     postal_code VARCHAR(20)
