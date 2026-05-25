@@ -1,16 +1,80 @@
-INSERT INTO valid_shipments
-(datetime, requestid, from_name, from_address, from_country_code, from_phone,
-to_name, to_address, to_country_code, to_phone, service, state, return_code, return_json)
+INSERT INTO customers (full_name, phone_number)
 VALUES
-(NOW(), 'sample-001', 'john', 'new york, usa', '+1', '9999999999',
-'rahul', 'delhi, india', '+91', '8888888888', 'express', 'initiated', 200,
-'{"status":"valid"}');
+('john', '9999999999'),
+('rahul', '8888888888');
 
-INSERT INTO invalid_shipments
-(datetime, requestid, input_json, error_reason, return_code, return_json)
+INSERT INTO addresses (
+    address_line,
+    city,
+    state,
+    country,
+    country_code,
+    postal_code
+)
 VALUES
-(NOW(), 'sample-invalid-001',
-'{"from_country_code":"+99","to_country_code":"+91"}',
-'invalid from country code',
-400,
-'{"status":"invalid","reason":"invalid from country code"}');
+('new york, usa', 'New York', 'NY', 'United States of America', 'US', '10001'),
+('delhi, india', 'Delhi', 'Delhi', 'India', 'IN', '110001');
+
+INSERT INTO shipments (
+    requestid,
+    sender_customer_id,
+    receiver_customer_id,
+    from_address_id,
+    to_address_id,
+    service,
+    validation_status,
+    validation_reason,
+    state,
+    return_code,
+    return_json
+)
+VALUES
+(
+    'sample-001',
+    1,
+    2,
+    1,
+    2,
+    'express',
+    'valid',
+    NULL,
+    'initiated',
+    200,
+    '{"status":"valid"}'
+);
+
+INSERT INTO shipments (
+    requestid,
+    sender_customer_id,
+    receiver_customer_id,
+    from_address_id,
+    to_address_id,
+    service,
+    validation_status,
+    validation_reason,
+    state,
+    return_code,
+    return_json
+)
+VALUES
+(
+    'sample-invalid-001',
+    1,
+    2,
+    1,
+    2,
+    'express',
+    'invalid',
+    'invalid from country code',
+    'initiated',
+    400,
+    '{"status":"invalid","reason":"invalid from country code"}'
+);
+
+INSERT INTO shipment_tracking (
+    shipment_id,
+    current_status
+)
+VALUES
+(1, 'initiated'),
+(2, 'validation_failed');
