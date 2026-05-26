@@ -1,2 +1,7 @@
+#used to store all the Python libraries/packages your project needs. 
+#install -r requirements.txt to install the dependencies
+
 Flask
 pytest
+mysql-connector-python
+python-dotenv
