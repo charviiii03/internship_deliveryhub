@@ -26,6 +26,7 @@ def check_application_auth(application_id, application_token):
     SELECT * FROM applications
     WHERE application_id = %s
     AND expiry_date >= CURDATE()
+    AND is_active = TRUE
     """
 
     cursor.execute(sql, (application_id,))
@@ -94,7 +95,7 @@ def validate_auth():
         "reason": "invalid or expired application"
     }), 401
 
-@app.route("/signup", methods=["POST"])
+@app.route("/admin/create-application")
 def signup():
 
     data = request.get_json()
@@ -142,6 +143,104 @@ def signup():
         "expiry_date": expiry_date.strftime("%Y-%m-%d")
     }), 201
 
+@app.route("/admin/applications", methods=["GET"])
+def view_applications():
+
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT application_id, application_name, user_email, expiry_date, is_active
+        FROM applications
+    """)
+
+    applications = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return jsonify({
+        "status": "success",
+        "applications": applications
+    }), 200
+
+@app.route("/admin/update-status", methods=["PUT"])
+def update_status():
+
+    data = request.get_json()
+
+    application_id = data.get("application_id")
+    is_active = data.get("is_active")
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        UPDATE applications
+        SET is_active = %s
+        WHERE application_id = %s
+    """, (is_active, application_id))
+
+    connection.commit()
+
+    cursor.close()
+    connection.close()
+
+    return jsonify({
+        "status": "success",
+        "message": "application status updated"
+    }), 200
+
+@app.route("/admin/auth-logs", methods=["GET"])
+def view_auth_logs():
+
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT application_id, request_time, status, reason, ip_address
+        FROM authentication_logs
+        ORDER BY request_time DESC
+    """)
+
+    logs = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return jsonify({
+        "status": "success",
+        "logs": logs
+    }), 200
+
+
+@app.route("/admin/update-expiry", methods=["PUT"])
+def update_expiry():
+
+    data = request.get_json()
+
+    application_id = data.get("application_id")
+    new_expiry_date = data.get("expiry_date")
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        UPDATE applications
+        SET expiry_date = %s
+        WHERE application_id = %s
+    """, (new_expiry_date, application_id))
+
+    connection.commit()
+
+    cursor.close()
+    connection.close()
+
+    return jsonify({
+        "status": "success",
+        "message": "expiry date updated"
+    }), 200
+
 @app.route("/signin", methods=["POST"])
 def signin():
 
@@ -157,6 +256,7 @@ def signin():
     SELECT * FROM applications
     WHERE application_id = %s
     AND expiry_date >= CURDATE()
+    AND is_active = TRUE
     """
 
     cursor.execute(sql, (application_id,))

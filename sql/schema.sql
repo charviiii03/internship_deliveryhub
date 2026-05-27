@@ -72,5 +72,15 @@ CREATE TABLE IF NOT EXISTS applications (
     user_email VARCHAR(100),
     expiry_date DATE,
     active_status BOOLEAN DEFAULT TRUE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS authentication_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    application_id VARCHAR(100),
+    request_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(20),
+    reason TEXT,
+    ip_address VARCHAR(100)
+);
