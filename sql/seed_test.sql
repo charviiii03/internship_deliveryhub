@@ -3,6 +3,7 @@ VALUES
 ('john', '9999999999'),
 ('rahul', '8888888888');
 
+
 INSERT INTO addresses (
     address_line,
     city,
@@ -15,7 +16,7 @@ VALUES
 ('new york, usa', 'New York', 'NY', 'United States of America', 'US', '10001'),
 ('delhi, india', 'Delhi', 'Delhi', 'India', 'IN', '110001');
 
-INSERT INTO shipments (
+INSERT IGNORE INTO shipments (
     requestid,
     sender_customer_id,
     receiver_customer_id,
@@ -43,7 +44,7 @@ VALUES
     '{"status":"valid"}'
 );
 
-INSERT INTO shipments (
+INSERT IGNORE INTO shipments ( -- this ignore skips it, if duplicate exists
     requestid,
     sender_customer_id,
     receiver_customer_id,
@@ -78,3 +79,8 @@ INSERT INTO shipment_tracking (
 VALUES
 (1, 'initiated'),
 (2, 'validation_failed');
+
+INSERT INTO applications
+(application_id, application_token, application_name, expiry_date)
+VALUES
+('app123', 'token123', 'test_client', '2026-12-31');
