@@ -5,9 +5,9 @@ VALUES
 
 
 INSERT INTO addresses (
-    address_line,
+    address_line1,
     city,
-    state,
+    state_name,
     country,
     country_code,
     postal_code
