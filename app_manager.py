@@ -1,6 +1,13 @@
 # generates unique ids
 import uuid
 
+from notifications import (
+    mail,
+    send_application_credentials
+)
+import os
+
+from dotenv import load_dotenv
 # generates secure random tokens
 import secrets
 
@@ -17,7 +24,17 @@ from flask import Flask, request, jsonify
 from db import get_db_connection
 
 app = Flask(__name__)
+load_dotenv()
 
+# Email configuration
+app.config["MAIL_SERVER"] = "smtp.gmail.com"
+app.config["MAIL_PORT"] = 587
+app.config["MAIL_USE_TLS"] = True
+
+app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
+
+mail.init_app(app)
 
 # -----------------------------
 # AUTHENTICATION LOGGING
@@ -262,6 +279,16 @@ def signup():
     ))
 
     connection.commit()
+    try:
+        send_application_credentials(
+        app,
+        user_email,
+        application_id,
+        application_token,
+        expiry_date.strftime("%Y-%m-%d")
+    )
+    except Exception as e:
+        print("Email sending failed:", e)
 
     cursor.close()
     connection.close()
