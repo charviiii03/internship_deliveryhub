@@ -1,7 +1,20 @@
+# -----------------------------
+# EMAIL SERVICE
+# -----------------------------
+# Handles email notifications
+# sent by App Manager
+
+
 from flask_mail import Mail, Message
 
 mail = Mail()
 
+# -----------------------------
+# SEND APPLICATION EMAIL
+# -----------------------------
+# Sends application credentials
+# to the email provided by admin
+# during application onboarding
 
 def send_application_credentials(
         app,
@@ -11,6 +24,9 @@ def send_application_credentials(
         expiry_date):
 
     with app.app_context():
+        
+        # Create email message
+        # containing application details
 
         msg = Message(
             subject="DeliveryHub Application Credentials",

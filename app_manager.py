@@ -1,6 +1,12 @@
 # generates unique ids
 import uuid
 
+# -----------------------------
+# EMAIL NOTIFICATION MODULE
+# -----------------------------
+# Used to send application
+# credentials to applicants
+
 from notifications import (
     mail,
     send_application_credentials
@@ -8,6 +14,7 @@ from notifications import (
 import os
 
 from dotenv import load_dotenv
+
 # generates secure random tokens
 import secrets
 
@@ -24,15 +31,29 @@ from flask import Flask, request, jsonify
 from db import get_db_connection
 
 app = Flask(__name__)
+# -----------------------------
+# EMAIL CONFIGURATION
+# -----------------------------
+# Load environment variables
+# from .env file
+
 load_dotenv()
 
+# Configure SMTP settings
+# used for sending emails
 # Email configuration
+
 app.config["MAIL_SERVER"] = "smtp.gmail.com"
 app.config["MAIL_PORT"] = 587
 app.config["MAIL_USE_TLS"] = True
 
+# Sender email credentials
+# are stored in .env file
+
 app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
 app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
+
+# Initialize Flask-Mail
 
 mail.init_app(app)
 
@@ -279,6 +300,14 @@ def signup():
     ))
 
     connection.commit()
+
+    # -----------------------------
+    # SEND APPLICATION CREDENTIALS
+    # -----------------------------
+    # After successful application
+    # creation, send generated
+    # credentials to applicant email
+
     try:
         send_application_credentials(
         app,
@@ -288,6 +317,10 @@ def signup():
         expiry_date.strftime("%Y-%m-%d")
     )
     except Exception as e:
+
+    # Application creation should
+    # continue even if email fails
+
         print("Email sending failed:", e)
 
     cursor.close()
