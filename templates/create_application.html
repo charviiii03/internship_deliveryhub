@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Application - DeliveryHub</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f7f9fc;
+            font-family: Arial, sans-serif;
+        }
+
+        .sidebar {
+            width: 260px;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #06244d, #02152e);
+            padding: 24px;
+            color: white;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 35px;
+        }
+
+        .sidebar-logo img {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            object-fit: cover;
+            background: white;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            text-decoration: none;
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .sidebar a:hover,
+        .sidebar .active {
+            background: #2563eb;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 32px;
+        }
+
+        .form-wrapper {
+            min-height: 75vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .form-card {
+            width: 100%;
+            max-width: 620px;
+            border: none;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 14px 35px rgba(15, 23, 42, 0.12);
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, #2563eb, #06b6d4);
+            color: white;
+            padding: 28px;
+        }
+
+        .icon-box {
+            width: 58px;
+            height: 58px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            margin-bottom: 14px;
+        }
+
+        .form-body {
+            padding: 32px;
+            background: white;
+        }
+
+        .form-control {
+            height: 46px;
+            border-radius: 12px;
+        }
+
+        .btn-create {
+            height: 48px;
+            border-radius: 12px;
+            font-weight: 600;
+            background: #111827;
+            color: white;
+        }
+
+        .btn-create:hover {
+            background: #2563eb;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="d-flex">
+
+    <div class="sidebar">
+
+        <div class="sidebar-logo">
+            <img src="{{ url_for('static', filename='logo.jpeg') }}">
+            <div>
+                <h4 class="mb-0">DeliveryHub</h4>
+                <small>ADMIN CONSOLE</small>
+            </div>
+        </div>
+
+        <a href="/admin-ui">
+            <i class="fa-solid fa-table-cells-large"></i> Dashboard
+        </a>
+
+        <a href="/admin-ui/create-application" class="active">
+            <i class="fa-solid fa-plus"></i> New Application
+        </a>
+
+        <a href="/admin-ui/applications">
+            <i class="fa-solid fa-building"></i> Applications
+        </a>
+
+        <a href="/admin-ui/auth-logs">
+            <i class="fa-solid fa-shield-halved"></i> Auth Logs
+        </a>
+
+        <a href="/admin-ui/shipments">
+            <i class="fa-solid fa-truck"></i> Shipments
+        </a>
+
+        <a href="/admin-ui/upload-label">
+            <i class="fa-solid fa-file-arrow-up"></i> Upload Label
+        </a>
+
+    </div>
+
+    <div class="main-content">
+
+        <div>
+            <h1 class="fw-bold mb-1">Create New Application</h1>
+            <p class="text-muted">Onboard a new client and send application credentials by email.</p>
+        </div>
+
+        <div class="form-wrapper">
+
+            <div class="card form-card">
+
+                <div class="form-header">
+
+                    <div class="icon-box">
+                        <i class="fa-solid fa-building-circle-check"></i>
+                    </div>
+
+                    <h3 class="fw-bold mb-1">Application Onboarding</h3>
+                    <p class="mb-0">
+                        Admin creates application access for backend integration.
+                    </p>
+
+                </div>
+
+                <div class="form-body">
+
+                    <form method="POST" action="/admin-ui/create-application">
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                Application Name
+                            </label>
+
+                            <input
+                                type="text"
+                                name="application_name"
+                                class="form-control"
+                                placeholder="Example: Sateesh Logistics"
+                                required
+                            >
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                User Email
+                            </label>
+
+                            <input
+                                type="email"
+                                name="user_email"
+                                class="form-control"
+                                placeholder="sateesh@example.com"
+                                required
+                            >
+                        </div>
+
+                        <button type="submit" class="btn btn-create w-100">
+                            <i class="fa-solid fa-plus me-2"></i>
+                            Create Application
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
