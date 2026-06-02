@@ -89,11 +89,62 @@ def generate_label():
             "reason": "authentication failed"
         }), 401
 
+    # -----------------------------
+    # DOCSHIPP VALIDATIONS
+    # -----------------------------
+
+    if not data.get("from_name"):
+        return jsonify({
+            "status": "invalid",
+            "reason": "Sender name is required"
+        }), 400
+
+    if not data.get("from_address"):
+        return jsonify({
+            "status": "invalid",
+            "reason": "Sender address is required"
+        }), 400
+
+    if not data.get("from_phone"):
+        return jsonify({
+            "status": "invalid",
+            "reason": "Sender phone number is required"
+        }), 400
+
+    if not data.get("to_name"):
+        return jsonify({
+            "status": "invalid",
+            "reason": "Recipient name is required"
+        }), 400
+
+    if not data.get("to_address"):
+        return jsonify({
+            "status": "invalid",
+            "reason": "Destination address is required"
+        }), 400
+
+    if not data.get("to_phone"):
+        return jsonify({
+            "status": "invalid",
+            "reason": "Recipient phone number is required"
+        }), 400
+
+    if not data.get("email"):
+        return jsonify({
+            "status": "invalid",
+            "reason": "Customer email is required for shipment updates"
+        }), 400
+
     return jsonify({
         "status": "valid",
         "message": "label generated successfully"
     }), 200
 
-
+# -----------------------------
+# RUN DOCSHIPP SERVICE
+# -----------------------------
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(
+        debug=True,
+        port=5000
+    )
