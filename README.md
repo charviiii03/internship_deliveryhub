@@ -32,6 +32,9 @@ The project includes:
 - Automated testing using Pytest
 - Database setup automation
 - Error handling and validation
+- Email notification service
+- Automated credential delivery
+- Environment variable configuration
 
 ---
 
@@ -42,6 +45,8 @@ Client
    |
    v
 Flask API Service
+   |
+   +-------> Notification Service
    |
    v
 MariaDB Database
@@ -404,6 +409,128 @@ is_active = false
 even if credentials are correct.
 
 ---
+---
+
+# Notification Service
+
+## Purpose
+
+Automatically notify application owners when a new application is created through the App Manager system.
+
+The notification service sends application credentials to the registered email address after successful application creation.
+
+---
+
+## Trigger Event
+
+### Endpoint
+
+```http
+POST /admin/create-application
+```
+
+### Notification Flow
+
+```text
+Admin
+   |
+   v
+Create Application
+   |
+   v
+Generate Application ID
+   |
+   v
+Generate Application Token
+   |
+   v
+Store Application Details
+   |
+   v
+Send Email Notification
+   |
+   v
+Application Owner
+```
+
+---
+
+## Email Contents
+
+The notification email contains:
+
+- Application ID
+- Application Token
+- Expiry Date
+
+Example:
+
+```text
+Application ID:
+03e27fea-a515-4319-b0b1-f1ef4482453c
+
+Application Token:
+xxxxxxxxxxxxxxxxxxxxxxxx
+
+Expiry Date:
+2026-08-30
+```
+
+---
+
+## Notification Module
+
+Notification functionality is implemented in a dedicated module:
+
+```text
+notifications.py
+```
+
+This module is responsible for:
+
+- Building email messages
+- Sending application credentials
+- Managing email delivery operations
+
+---
+
+## Email Configuration
+
+SMTP settings are configured through environment variables.
+
+```env
+MAIL_USERNAME=<sender_email>
+MAIL_PASSWORD=<app_password>
+```
+
+Benefits:
+
+- Improved security
+- Credentials not stored in source code
+- Easier deployment across environments
+
+---
+
+## Libraries Used
+
+```text
+Flask-Mail
+python-dotenv
+```
+
+---
+
+## Future Notification Enhancements
+
+Planned improvements:
+
+- WhatsApp notifications
+- Shipment request notifications
+- Application expiry reminders
+- Notification retry mechanism
+- Admin alert notifications
+
+---
 
 # Authentication Logs
 
@@ -571,4 +698,6 @@ start.sh
 - Pytest
 - Docker (Planned)
 - Linux
+- Flask-Mail
+- python-dotenv
 
