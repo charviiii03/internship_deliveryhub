@@ -50,8 +50,8 @@ app.config["MAIL_USE_TLS"] = True
 # Sender email credentials
 # are stored in .env file
 
-app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
-app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
+app.config["MAIL_USERNAME"] = "parcelmybox3@gmail.com"
+app.config["MAIL_PASSWORD"] = "knqx pquf jhap ncqi"
 
 # Initialize Flask-Mail
 

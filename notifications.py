@@ -29,7 +29,7 @@ def send_application_credentials(
         # containing application details
 
         msg = Message(
-            subject="DeliveryHub Application Credentials",
+            subject="ParcelMyBox Application Credentials",
             sender=app.config["MAIL_USERNAME"],
             recipients=[recipient_email]
         )
@@ -37,7 +37,7 @@ def send_application_credentials(
         msg.body = f"""
 Hello,
 
-Your application has been created.
+Your ParcelMyBox application has been created with details(application id , token ,expiry).
 
 Application ID:
 {application_id}
