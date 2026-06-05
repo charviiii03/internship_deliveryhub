@@ -9,8 +9,11 @@ import uuid
 
 from notifications import (
     mail,
-    send_application_credentials
+    send_onboarding_email,
+    send_renewal_email,
+    send_inactive_email
 )
+
 import os
 
 from dotenv import load_dotenv
@@ -50,8 +53,8 @@ app.config["MAIL_USE_TLS"] = True
 # Sender email credentials
 # are stored in .env file
 
-app.config["MAIL_USERNAME"] = "parcelmybox3@gmail.com"
-app.config["MAIL_PASSWORD"] = "knqx pquf jhap ncqi"
+app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
 
 # Initialize Flask-Mail
 
@@ -309,7 +312,7 @@ def signup():
     # credentials to applicant email
 
     try:
-        send_application_credentials(
+        send_onboarding_email(
         app,
         user_email,
         application_id,
@@ -408,7 +411,23 @@ def update_status():
             "reason": "database unavailable"
         }), 500
 
-    cursor = connection.cursor()
+    cursor = connection.cursor(
+        dictionary=True
+    )
+
+    # Fetch application details
+    # for notification email
+
+    cursor.execute("""
+        SELECT
+            user_email
+        FROM applications
+        WHERE application_id = %s
+    """, (
+        application_id,
+    ))
+
+    application = cursor.fetchone()
 
     cursor.execute("""
         UPDATE applications
@@ -421,6 +440,30 @@ def update_status():
 
     connection.commit()
 
+    # Send inactive notification
+    # only when application
+    # is disabled
+
+    if (
+        application
+        and not is_active
+    ):
+
+        try:
+
+            send_inactive_email(
+                app,
+                application["user_email"],
+                application_id
+            )
+
+        except Exception as e:
+
+            print(
+                "Inactive email failed:",
+                e
+            )
+
     cursor.close()
     connection.close()
 
@@ -428,7 +471,6 @@ def update_status():
         "status": "success",
         "message": "application status updated"
     }), 200
-
 
 # -----------------------------
 # UPDATE EXPIRY DATE
@@ -458,7 +500,23 @@ def update_expiry():
             "reason": "database unavailable"
         }), 500
 
-    cursor = connection.cursor()
+    cursor = connection.cursor(
+        dictionary=True
+    )
+
+    # Fetch application details
+    # for renewal notification
+
+    cursor.execute("""
+        SELECT
+            user_email
+        FROM applications
+        WHERE application_id = %s
+    """, (
+        application_id,
+    ))
+
+    application = cursor.fetchone()
 
     cursor.execute("""
         UPDATE applications
@@ -471,6 +529,26 @@ def update_expiry():
 
     connection.commit()
 
+    # Send renewal email
+
+    if application:
+
+        try:
+
+            send_renewal_email(
+                app,
+                application["user_email"],
+                application_id,
+                new_expiry_date
+            )
+
+        except Exception as e:
+
+            print(
+                "Renewal email failed:",
+                e
+            )
+
     cursor.close()
     connection.close()
 
@@ -478,7 +556,6 @@ def update_expiry():
         "status": "success",
         "message": "expiry date updated"
     }), 200
-
 
 # -----------------------------
 # VIEW AUTH LOGS
