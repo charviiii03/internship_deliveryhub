@@ -532,8 +532,11 @@ def update_expiry():
     # Send renewal email
 
     if application:
+        print("APPLICATION =", application)
+        print("APPLICATION TYPE =", type(application))
 
         try:
+            print("ATTEMPTING TO SEND RENEWAL EMAIL")
 
             send_renewal_email(
                 app,

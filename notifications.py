@@ -45,7 +45,19 @@ def send_email(
 
         msg.body = email_body
 
-        mail.send(msg)
+        try:
+
+            mail.send(msg)
+
+            print(
+                f"EMAIL SENT SUCCESSFULLY TO: {recipient_email}"
+            )
+
+        except Exception as e:
+
+            print(
+                f"EMAIL FAILED: {e}"
+            )
 
 
 # -----------------------------
@@ -220,3 +232,4 @@ def send_report_email(
             "ParcelMyBox"
         }
     )
+   
