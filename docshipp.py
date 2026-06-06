@@ -1,21 +1,38 @@
 import re
 
 from werkzeug.exceptions import BadRequest
-
 from flask import Flask, request, jsonify
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 from app_manager import check_application_auth
 
 app = Flask(__name__)
 
-app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["100 per hour"]
+)
+
+app.config["MAX_CONTENT_LENGTH"] = 1024 * 1024
+
+
+def is_valid_phone(phone):
+    return re.fullmatch(r"[0-9]{8,15}", phone) is not None
+
+
+def is_valid_email(email):
+    return re.fullmatch(r"^[\w\.-]+@[\w\.-]+\.\w+$", email) is not None
+
+
+def is_safe_text(value):
+    return re.fullmatch(r"[a-zA-Z0-9\s,.-]+", value) is not None
 
 
 @app.route("/validate", methods=["POST"])
 def validate_text():
-
     try:
-
         data = request.get_json()
 
         if not data or "text" not in data:
@@ -55,27 +72,26 @@ def validate_text():
         }), 200
 
     except BadRequest:
-
         return jsonify({
             "status": "invalid",
             "reason": "Invalid JSON"
         }), 400
 
-    except Exception as e:
-
-        return jsonify({
-            "status": "error",
-            "reason": str(e)
-        }), 500
-
 
 @app.route("/generate-label", methods=["POST"])
+@limiter.limit("10 per minute")
 def generate_label():
 
     data = request.get_json()
 
-    application_id = data.get("application_id") if data else None
-    application_token = data.get("application_token") if data else None
+    if not data:
+        return jsonify({
+            "status": "invalid",
+            "reason": "Request body missing"
+        }), 400
+
+    application_id = data.get("application_id")
+    application_token = data.get("application_token")
 
     application = check_application_auth(
         application_id,
@@ -89,60 +105,54 @@ def generate_label():
             "reason": "authentication failed"
         }), 401
 
-    # -----------------------------
-    # DOCSHIPP VALIDATIONS
-    # -----------------------------
+    required_fields = [
+        "from_name",
+        "from_address",
+        "from_phone",
+        "to_name",
+        "to_address",
+        "to_phone",
+        "email"
+    ]
 
-    if not data.get("from_name"):
+    for field in required_fields:
+        if not data.get(field):
+            return jsonify({
+                "status": "invalid",
+                "reason": f"{field} is required"
+            }), 400
+
+    if not is_valid_phone(data.get("from_phone")):
         return jsonify({
             "status": "invalid",
-            "reason": "Sender name is required"
+            "reason": "Invalid sender phone number"
         }), 400
 
-    if not data.get("from_address"):
+    if not is_valid_phone(data.get("to_phone")):
         return jsonify({
             "status": "invalid",
-            "reason": "Sender address is required"
+            "reason": "Invalid recipient phone number"
         }), 400
 
-    if not data.get("from_phone"):
+    if not is_valid_email(data.get("email")):
         return jsonify({
             "status": "invalid",
-            "reason": "Sender phone number is required"
+            "reason": "Invalid email format"
         }), 400
 
-    if not data.get("to_name"):
-        return jsonify({
-            "status": "invalid",
-            "reason": "Recipient name is required"
-        }), 400
-
-    if not data.get("to_address"):
-        return jsonify({
-            "status": "invalid",
-            "reason": "Destination address is required"
-        }), 400
-
-    if not data.get("to_phone"):
-        return jsonify({
-            "status": "invalid",
-            "reason": "Recipient phone number is required"
-        }), 400
-
-    if not data.get("email"):
-        return jsonify({
-            "status": "invalid",
-            "reason": "Customer email is required for shipment updates"
-        }), 400
+    for field in ["from_name", "from_address", "to_name", "to_address"]:
+        if not is_safe_text(data.get(field)):
+            return jsonify({
+                "status": "invalid",
+                "reason": f"Invalid characters in {field}"
+            }), 400
 
     return jsonify({
         "status": "valid",
         "message": "label generated successfully"
     }), 200
 
-# -----------------------------
-# RUN DOCSHIPP SERVICE
-# -----------------------------
+
 if __name__ == "__main__":
     app.run(
         debug=True,
