@@ -1,14 +1,41 @@
+# notifications.py
+
+```python
 # -----------------------------
 # EMAIL SERVICE
 # -----------------------------
 # Handles email notifications
 # sent by App Manager
 
+import os
 
 from flask_mail import Mail, Message
 from flask import render_template
 
 mail = Mail()
+
+# -----------------------------
+# COMPANY CONFIGURATION
+# -----------------------------
+# Loaded from environment
+# variables instead of
+# hardcoded values
+
+COMPANY_NAME = os.getenv(
+    "COMPANY_NAME"
+)
+
+COMPANY_WEBSITE = os.getenv(
+    "COMPANY_WEBSITE"
+)
+
+COMPANY_PHONE = os.getenv(
+    "COMPANY_PHONE"
+)
+
+SUPPORT_EMAIL = os.getenv(
+    "SUPPORT_EMAIL"
+)
 
 
 # -----------------------------
@@ -27,15 +54,10 @@ def send_email(
 
     with app.app_context():
 
-        # Load email template
-        # and replace variables
-
         email_body = render_template(
             f"email_templates/{template_name}",
             **context
         )
-
-        # Create email message
 
         msg = Message(
             subject=subject,
@@ -77,14 +99,14 @@ def send_onboarding_email(
         app,
         recipient_email,
         "ParcelMyBox Application Credentials",
-        "onboarding_email.txt",
+        "onboarding_email.md",
         {
 
             "customer_name":
             recipient_email,
 
             "application_name":
-            "ParcelMyBox",
+            COMPANY_NAME,
 
             "application_id":
             application_id,
@@ -96,19 +118,19 @@ def send_onboarding_email(
             expiry_date,
 
             "portal_url":
-            "https://parcelmybox.com",
+            COMPANY_WEBSITE,
 
             "support_email":
-            "parcelmybox3@gmail.com",
+            SUPPORT_EMAIL,
 
             "support_phone":
-            "+1 (209) 302-1767",
+            COMPANY_PHONE,
 
             "company_website":
-            "https://parcelmybox.com",
+            COMPANY_WEBSITE,
 
             "company_name":
-            "ParcelMyBox",
+            COMPANY_NAME,
 
             "sender_name":
             "ParcelMyBox Team",
@@ -135,11 +157,14 @@ def send_renewal_email(
         app,
         recipient_email,
         "ParcelMyBox Application Renewal",
-        "renewal_email.txt",
+        "renewal_email.md",
         {
 
             "customer_name":
             recipient_email,
+
+            "application_name":
+            COMPANY_NAME,
 
             "application_id":
             application_id,
@@ -147,11 +172,17 @@ def send_renewal_email(
             "expiration_date":
             expiry_date,
 
+            "support_email":
+            SUPPORT_EMAIL,
+
+            "support_phone":
+            COMPANY_PHONE,
+
             "company_name":
-            "ParcelMyBox",
+            COMPANY_NAME,
 
             "company_website":
-            "https://parcelmybox.com",
+            COMPANY_WEBSITE,
 
             "sender_name":
             "ParcelMyBox Team"
@@ -174,23 +205,32 @@ def send_inactive_email(
         app,
         recipient_email,
         "ParcelMyBox Application Inactive",
-        "inactive_email.txt",
+        "inactive_email.md",
         {
 
             "customer_name":
             recipient_email,
 
+            "application_name":
+            COMPANY_NAME,
+
             "application_id":
             application_id,
 
+            "inactive_reason":
+            "No inquiries or business activity detected in the last 30 days",
+
             "support_email":
-            "parcelmybox3@gmail.com",
+            SUPPORT_EMAIL,
+
+            "support_phone":
+            COMPANY_PHONE,
 
             "company_name":
-            "ParcelMyBox",
+            COMPANY_NAME,
 
             "company_website":
-            "https://parcelmybox.com"
+            COMPANY_WEBSITE
         }
     )
 
@@ -213,7 +253,7 @@ def send_report_email(
         app,
         recipient_email,
         "ParcelMyBox Business Report",
-        "report_email.txt",
+        "report_email.md",
         {
 
             "total_enquiries":
@@ -229,7 +269,10 @@ def send_report_email(
             report_date,
 
             "company_name":
-            "ParcelMyBox"
+            COMPANY_NAME,
+
+            "company_website":
+            COMPANY_WEBSITE
         }
     )
-   
+```
