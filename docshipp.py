@@ -44,6 +44,25 @@ def validate_text():
                 "reason": "Input too large"
             }), 400
 
+        # -----------------------------
+        # SQL INJECTION CHECK
+        # -----------------------------
+        sql_keywords = [
+            "DROP",
+            "DELETE",
+            "TRUNCATE",
+            "ALTER",
+            "INSERT",
+            "UPDATE"
+        ]
+
+        for keyword in sql_keywords:
+            if keyword in text.upper():
+                return jsonify({
+                    "status": "invalid",
+                    "reason": "Potential SQL injection detected"
+                }), 400
+
         if re.search(r"[^a-zA-Z0-9 ]", text):
             return jsonify({
                 "status": "invalid",
@@ -67,7 +86,6 @@ def validate_text():
             "status": "error",
             "reason": str(e)
         }), 500
-
 
 @app.route("/generate-label", methods=["POST"])
 def generate_label():
