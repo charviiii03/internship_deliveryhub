@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Shipment - DeliveryHub</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f7f9fc;
+            font-family: Arial, sans-serif;
+        }
+
+        .card {
+            border: none;
+            border-radius: 18px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        .form-control,
+        .form-select {
+            height: 45px;
+            border-radius: 10px;
+        }
+
+        .btn-dark {
+            height: 48px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container mt-5 mb-5">
+
+    <div class="card shadow p-4 col-md-9 mx-auto">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="fw-bold mb-1">Create Shipment Request</h2>
+                <p class="text-muted mb-0">
+                    Admin can create India ↔ USA shipment requests.
+                </p>
+            </div>
+
+            <a href="/admin-ui/shipments" class="btn btn-outline-dark">
+                Back
+            </a>
+        </div>
+
+        <form method="POST" action="/admin-ui/create-shipment">
+
+            <h5 class="section-title">
+                <i class="fa-solid fa-user me-2"></i>
+                Sender Details
+            </h5>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <input class="form-control" name="sender_name" placeholder="Sender Name" required>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <input class="form-control" type="email" name="sender_email" placeholder="Sender Email" required>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <select class="form-select" name="from_country" required>
+                        <option value="">Sender Country</option>
+                        <option value="India">India</option>
+                        <option value="USA">USA</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <select class="form-select" name="from_country_code" required>
+                        <option value="">Country Code</option>
+                        <option value="IN">IN - India</option>
+                        <option value="US">US - USA</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <select class="form-select" name="sender_phone_code" required>
+                        <option value="">Phone Code</option>
+                        <option value="+91">+91 India</option>
+                        <option value="+1">+1 USA</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <input class="form-control" name="sender_phone" placeholder="Sender Phone Number" required>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <input class="form-control" name="from_postal_code" placeholder="Postal Code" required>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <input class="form-control" name="from_address" placeholder="From Address" required>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <input class="form-control" name="from_city" placeholder="From City" required>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <input class="form-control" name="from_state" placeholder="From State" required>
+                </div>
+            </div>
+
+            <h5 class="section-title">
+                <i class="fa-solid fa-location-dot me-2"></i>
+                Receiver Details
+            </h5>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <input class="form-control" name="receiver_name" placeholder="Receiver Name" required>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <input class="form-control" type="email" name="receiver_email" placeholder="Receiver Email" required>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <select class="form-select" name="to_country" required>
+                        <option value="">Receiver Country</option>
+                        <option value="India">India</option>
+                        <option value="USA">USA</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <select class="form-select" name="to_country_code" required>
+                        <option value="">Country Code</option>
+                        <option value="IN">IN - India</option>
+                        <option value="US">US - USA</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <select class="form-select" name="receiver_phone_code" required>
+                        <option value="">Phone Code</option>
+                        <option value="+91">+91 India</option>
+                        <option value="+1">+1 USA</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <input class="form-control" name="receiver_phone" placeholder="Receiver Phone Number" required>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <input class="form-control" name="to_postal_code" placeholder="Postal Code" required>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <input class="form-control" name="to_address" placeholder="To Address" required>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <input class="form-control" name="to_city" placeholder="To City" required>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <input class="form-control" name="to_state" placeholder="To State" required>
+                </div>
+            </div>
+
+            <h5 class="section-title">
+                <i class="fa-solid fa-truck me-2"></i>
+                Shipment Details
+            </h5>
+
+            <input class="form-control mb-4" name="service" placeholder="Service e.g. Express International" required>
+
+            <button class="btn btn-dark w-100" type="submit">
+                <i class="fa-solid fa-plus me-2"></i>
+                Create Shipment
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+</html>

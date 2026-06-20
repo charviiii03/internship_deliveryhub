@@ -53,3 +53,41 @@ DeliveryHub Team
 """
 
         mail.send(msg)
+
+
+def send_label_notification(
+        app,
+        recipient_email,
+        shipment_id,
+        label_file_path):
+
+    with app.app_context():
+
+        msg = Message(
+            subject="DeliveryHub Shipment Label",
+            sender=app.config["MAIL_USERNAME"],
+            recipients=[recipient_email]
+        )
+
+        msg.body = f"""
+Hello,
+
+Your shipment label is ready.
+
+Shipment ID:
+{shipment_id}
+
+The PDF label is attached with this email.
+
+Regards,
+DeliveryHub Team
+"""
+
+        with app.open_resource(label_file_path) as fp:
+            msg.attach(
+                filename="shipment_label.pdf",
+                content_type="application/pdf",
+                data=fp.read()
+            )
+
+        mail.send(msg)

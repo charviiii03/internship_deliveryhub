@@ -7,17 +7,139 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
 
     <style>
-        body { background: #f7f9fc; font-family: Arial, sans-serif; }
-        .sidebar { width: 260px; min-height: 100vh; background: white; border-right: 1px solid #e5e7eb; padding: 24px; }
-        .sidebar-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 35px; }
-        .sidebar-logo img { width: 46px; height: 46px; border-radius: 14px; object-fit: cover; }
-        .sidebar-title { font-weight: 700; font-size: 20px; }
-        .sidebar-small { font-size: 11px; color: #6b7280; letter-spacing: 1px; }
-        .sidebar a { display: flex; align-items: center; gap: 12px; color: #374151; text-decoration: none; padding: 12px 14px; border-radius: 12px; margin-bottom: 10px; font-weight: 500; }
-        .sidebar a:hover, .sidebar .active { background: #2563eb; color: white; }
-        .main-content { flex: 1; padding: 32px; }
-        .page-card { background: white; border: 1px solid #e5e7eb; border-radius: 18px; box-shadow: 0 8px 24px rgba(15,23,42,0.06); }
-        .table thead th { background: #f8fafc; color: #475569; font-size: 13px; text-transform: uppercase; }
+        body {
+            background: #f7f9fc;
+            font-family: Arial, sans-serif;
+        }
+
+        .sidebar {
+            width: 260px;
+            min-height: 100vh;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            padding: 24px;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 35px;
+        }
+
+        .sidebar-logo img {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            object-fit: cover;
+        }
+
+        .sidebar-title {
+            font-weight: 700;
+            font-size: 20px;
+        }
+
+        .sidebar-small {
+            font-size: 11px;
+            color: #6b7280;
+            letter-spacing: 1px;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #374151;
+            text-decoration: none;
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .sidebar a:hover,
+        .sidebar .active {
+            background: #2563eb;
+            color: white;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 32px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            padding: 22px;
+            box-shadow: 0 8px 24px rgba(15,23,42,0.06);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 14px;
+        }
+
+        .page-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            box-shadow: 0 8px 24px rgba(15,23,42,0.06);
+        }
+
+        .table thead th {
+            background: #f8fafc;
+            color: #475569;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table td {
+            vertical-align: middle;
+            font-size: 14px;
+        }
+
+        .request-id {
+            max-width: 220px;
+            word-break: break-all;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        .status-valid {
+            background: #dcfce7;
+            color: #15803d;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .status-invalid {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .state-badge {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 12px;
+        }
     </style>
 </head>
 
@@ -34,19 +156,108 @@
             </div>
         </div>
 
-        <a href="/admin-ui"><i class="fa-solid fa-table-cells-large"></i> Dashboard</a>
-        <a href="/admin-ui/applications"><i class="fa-solid fa-building"></i> Applications</a>
-        <a href="/admin-ui/auth-logs"><i class="fa-solid fa-shield-halved"></i> Auth Logs</a>
-        <a href="/admin-ui/shipments" class="active"><i class="fa-solid fa-truck"></i> Shipments</a>
-        <a href="/admin-ui/upload-label"><i class="fa-solid fa-file-arrow-up"></i> Upload Label</a>
+        <a href="/admin-ui">
+            <i class="fa-solid fa-table-cells-large"></i> Dashboard
+        </a>
+
+        <a href="/admin-ui/applications">
+            <i class="fa-solid fa-building"></i> Applications
+        </a>
+
+        <a href="/admin-ui/auth-logs">
+            <i class="fa-solid fa-shield-halved"></i> Auth Logs
+        </a>
+
+        <a href="/admin-ui/shipments" class="active">
+            <i class="fa-solid fa-truck"></i> Shipments
+        </a>
+        <a href="/admin-ui/create-shipment" class="btn btn-primary px-4 me-2">
+            <i class="fa-solid fa-plus me-2"></i> Add Shipment
+        </a>
+        <a href="/admin-ui/upload-label">
+            <i class="fa-solid fa-file-arrow-up"></i> Upload Label
+        </a>
     </div>
 
     <div class="main-content">
 
-        <h1 class="fw-bold mb-1">Shipment Requests</h1>
-        <p class="text-muted mb-4">View valid, invalid and processed shipment requests.</p>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="fw-bold mb-1">Shipment Requests</h1>
+                <p class="text-muted mb-0">
+                    View valid, invalid, processed and label-uploaded shipment requests.
+                </p>
+            </div>
+
+            <a href="/admin-ui/upload-label" class="btn btn-dark px-4">
+                <i class="fa-solid fa-file-arrow-up me-2"></i>
+                Upload Label
+            </a>
+        </div>
+
+        <div class="row g-4 mb-4">
+
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-primary-subtle text-primary">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </div>
+                    <p class="text-muted mb-1">Total Shipments</p>
+                    <h2 class="fw-bold">{{ shipments|length }}</h2>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-success-subtle text-success">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <p class="text-muted mb-1">Valid Shipments</p>
+                    <h2 class="fw-bold">
+                        {{ shipments|selectattr("validation_status", "equalto", "valid")|list|length }}
+                    </h2>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-danger-subtle text-danger">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </div>
+                    <p class="text-muted mb-1">Invalid Shipments</p>
+                    <h2 class="fw-bold">
+                        {{ shipments|selectattr("validation_status", "equalto", "invalid")|list|length }}
+                    </h2>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-info-subtle text-info">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </div>
+                    <p class="text-muted mb-1">Labels Uploaded</p>
+                    <h2 class="fw-bold">
+                        {{ shipments|selectattr("state", "equalto", "label_uploaded")|list|length }}
+                    </h2>
+                </div>
+            </div>
+
+        </div>
 
         <div class="page-card p-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">All Shipments</h4>
+
+                <input
+                    type="text"
+                    class="form-control"
+                    style="max-width: 280px;"
+                    placeholder="Search shipment..."
+                >
+            </div>
+
             <div class="table-responsive">
 
                 <table class="table table-hover align-middle mb-0">
@@ -59,33 +270,71 @@
                             <th>Reason</th>
                             <th>State</th>
                             <th>Return Code</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
 
                     <tbody>
                     {% for shipment in shipments %}
                         <tr>
-                            <td>{{ shipment.shipment_id }}</td>
-                            <td>{{ shipment.requestid }}</td>
-                            <td>{{ shipment.service }}</td>
+                            <td class="fw-semibold">
+                                {{ shipment.shipment_id }}
+                            </td>
+
+                            <td class="request-id">
+                                {{ shipment.requestid }}
+                            </td>
+
+                            <td>
+                                {{ shipment.service }}
+                            </td>
 
                             <td>
                                 {% if shipment.validation_status == "valid" %}
-                                    <span class="badge bg-success">Valid</span>
+                                    <span class="status-valid">Valid</span>
                                 {% else %}
-                                    <span class="badge bg-danger">Invalid</span>
+                                    <span class="status-invalid">Invalid</span>
                                 {% endif %}
                             </td>
 
-                            <td>{{ shipment.validation_reason }}</td>
-                            <td>{{ shipment.state }}</td>
-                            <td>{{ shipment.return_code }}</td>
+                            <td>
+                                {% if shipment.validation_reason %}
+                                    {{ shipment.validation_reason }}
+                                {% else %}
+                                    <span class="text-muted">No issues</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <span class="state-badge">
+                                    {{ shipment.state }}
+                                </span>
+                            </td>
+
+                            <td>
+                                {{ shipment.return_code }}
+                            </td>
+
+                            <td>
+                                {% if shipment.validation_status == "valid" %}
+                                    <a href="/admin-ui/upload-label"
+                                       class="btn btn-primary btn-sm">
+                                        Upload Label
+                                    </a>
+                                {% else %}
+                                    <button class="btn btn-secondary btn-sm" disabled>
+                                        Not Allowed
+                                    </button>
+                                {% endif %}
+                            </td>
                         </tr>
                     {% endfor %}
                     </tbody>
+
                 </table>
 
             </div>
+
         </div>
 
     </div>

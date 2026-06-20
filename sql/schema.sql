@@ -109,3 +109,16 @@ CREATE TABLE IF NOT EXISTS authentication_logs (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
+CREATE TABLE IF NOT EXISTS shipment_labels (
+    label_id INT AUTO_INCREMENT PRIMARY KEY,
+    shipment_id INT NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    emailed_to_customer BOOLEAN DEFAULT FALSE,
+
+    CONSTRAINT fk_label_shipment
+        FOREIGN KEY (shipment_id)
+        REFERENCES shipments(shipment_id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
