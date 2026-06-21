@@ -635,69 +635,459 @@ Benefits:
 - Provides meaningful error messages
 
 ---
+# DeliveryHub – Admin Management Portal
 
-# Security Enhancements
+## Overview
 
-Implemented:
+The Admin Management Portal is a web-based administration console developed for managing applications, authentication logs, shipment requests, shipment labels, and overall system monitoring.
 
-- Application authentication
-- Password hashing
-- Expiry validation
-- Active/Inactive controls
-- Authentication logging
-- Input validation
+The portal provides administrators with a centralized dashboard to monitor platform activity, onboard applications, track shipments, and manage authentication access.
 
-Planned:
+---
 
-- JWT Authentication
-- HTTPS/TLS via Nginx
-- Rate Limiting
-- Docker Deployment
-- Production Monitoring
+# Admin Dashboard
+
+The Admin Dashboard provides a centralized view of the entire system.
+
+### Features
+
+- Total Applications
+- Valid Authentication Requests
+- Invalid Authentication Requests
+- Total Shipments
+- Recent Activity Feed
+- Quick Actions Navigation
+- Shipment Summary Statistics
+
+### Access
+
+```text
+http://localhost:5001/admin-ui
+```
+
+---
+
+# Admin UI Features
+
+## 1. Applications Management
+
+### Endpoint
+
+```text
+/admin-ui/applications
+```
+
+### Capabilities
+
+- View all registered applications
+- Search applications
+- View application status
+- Monitor expiry dates
+- Create new applications
+
+---
+
+## 2. Authentication Logs
+
+### Endpoint
+
+```text
+/admin-ui/auth-logs
+```
+
+### Capabilities
+
+- View authentication attempts
+- Monitor successful logins
+- Monitor failed logins
+- Audit application access
+- View source IP addresses
+
+---
+
+## 3. Shipment Management
+
+### Endpoint
+
+```text
+/ admin-ui/shipments
+```
+
+### Capabilities
+
+- View shipment requests
+- Monitor shipment status
+- Track shipment lifecycle
+- View sender and receiver information
+- View shipment validation results
+
+---
+
+## 4. Create Shipment
+
+### Endpoint
+
+```text
+/admin-ui/create-shipment
+```
+
+### Capabilities
+
+- Create shipment requests directly from Admin UI
+- Validate sender information
+- Validate receiver information
+- Support India and USA shipment rules
+- Automatically create shipment tracking records
+
+### Validation Rules
+
+#### India
+
+| Field | Validation |
+|---------|------------|
+| Country Code | IN |
+| Phone Code | +91 |
+| Phone Length | 10 Digits |
+| Postal Code | 6 Digits |
+
+#### USA
+
+| Field | Validation |
+|---------|------------|
+| Country Code | US |
+| Phone Code | +1 |
+| Phone Length | 10 Digits |
+| Postal Code | 5 Digits |
+
+---
+
+## 5. Upload Label
+
+### Endpoint
+
+```text
+/admin-ui/upload-label
+```
+
+### Capabilities
+
+- Upload shipment labels
+- Store uploaded label files
+- Associate labels with shipment requests
+
+---
+
+# Docker Deployment
+
+The project is fully containerized using Docker and Docker Compose.
+
+---
+
+## Services
+
+### App Manager
+
+**Container**
+
+```text
+deliveryhub_app_manager
+```
+
+### Responsibilities
+
+- Flask API
+- Admin Portal
+- Application Management
+- Shipment Processing
+- Notification Service
+
+---
+
+### Database
+
+**Container**
+
+```text
+deliveryhub_db
+```
+
+**Image**
+
+```text
+mysql:8.0
+```
+
+### Responsibilities
+
+- Store applications
+- Store shipments
+- Store authentication logs
+- Store shipment tracking information
+
+---
+
+# Docker Architecture
+
+```text
++----------------------+
+|    Admin Portal      |
+|     Flask API        |
++----------+-----------+
+           |
+           v
++----------------------+
+|    MySQL Database    |
+|   deliveryhub_dev    |
++----------------------+
+```
+
+---
+
+# Running with Docker
+
+## Build Containers
+
+```bash
+docker compose up --build
+```
+
+## Run in Background
+
+```bash
+docker compose up -d
+```
+
+## Stop Containers
+
+```bash
+docker compose down
+```
+
+## View Running Containers
+
+```bash
+docker ps
+```
+
+## View Logs
+
+```bash
+docker compose logs -f
+```
+
+---
+
+# Docker Environment Variables
+
+Example:
+
+```env
+APP_ENV=dev
+
+DB_HOST=db
+DB_USER=root
+DB_PASSWORD=root
+DB_NAME=deliveryhub_dev
+
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=your_app_password
+```
+
+---
+
+# Project Structure
+
+```text
+internship_deliveryhub
+│
+├── app_manager.py
+├── db.py
+├── notifications.py
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+│
+├── sql
+│   ├── schema.sql
+│   └── seed_test.sql
+│
+├── templates
+│   ├── admin_dashboard.html
+│   ├── applications.html
+│   ├── auth_logs.html
+│   ├── shipments.html
+│   ├── create_application.html
+│   ├── create_shipment.html
+│   └── upload_label.html
+│
+├── static
+│   └── logo.jpeg
+│
+├── uploads
+│
+└── tests
+    ├── test_app.py
+    └── test_integration.py
+```
+
+---
+
+# Database Schema
+
+## customers
+
+Stores sender and receiver details.
+
+### Fields
+
+- customer_id
+- full_name
+- phone_number
+- email
+
+---
+
+## addresses
+
+Stores shipment address information.
+
+### Fields
+
+- address_id
+- address_line1
+- address_line2
+- city
+- state_name
+- country
+- country_code
+- postal_code
+
+---
+
+## shipments
+
+Stores shipment requests.
+
+### Fields
+
+- shipment_id
+- requestid
+- sender_customer_id
+- receiver_customer_id
+- from_address_id
+- to_address_id
+- service
+- validation_status
+- validation_reason
+- state
+- return_code
+- return_json
+
+---
+
+## shipment_tracking
+
+Stores shipment tracking updates.
+
+### Fields
+
+- tracking_id
+- shipment_id
+- current_status
+- updated_time
+
+---
+
+## applications
+
+Stores onboarded client applications.
+
+### Fields
+
+- application_id
+- application_token
+- application_name
+- user_email
+- expiry_date
+- is_active
+- created_at
+
+---
+
+## authentication_logs
+
+Stores application authentication activity.
+
+### Fields
+
+- application_id
+- request_time
+- status
+- reason
+- ip_address
+
+---
+
+# Security Features
+
+The following security mechanisms have been implemented:
+
+- Application Authentication
+- Token Hashing
+- Password Hashing
+- Expiry Validation
+- Active/Inactive Controls
+- Authentication Logging
+- Input Validation
+- Email-Based Credential Delivery
+- Environment Variable Configuration
+- Docker Container Isolation
 
 ---
 
 # Future Improvements
 
-- Dockerization
-- Docker Compose setup
-- HTTPS using Nginx
-- JWT Authorization
+Planned enhancements for future releases:
+
+- JWT Authentication
+- Role-Based Access Control (RBAC)
+- HTTPS with Nginx
 - Rate Limiting
-- Advanced Input Validation
-- Linux Deployment Scripts
-- Production Deployment
-- Monitoring Dashboard
+- Shipment Status Workflow Automation
+- Advanced Dashboard Analytics
+- WhatsApp Notifications
+- Application Expiry Reminders
+- Production Monitoring
+- Kubernetes Deployment
 
 ---
 
-# Scripts
-
-### Database Setup
-
-```bash
-./setup_db.sh
-```
-
-### Future Scripts
-
-```bash
-install.sh
-
-start.sh
-```
-
----
-
-# Tech Stack
+# Key Technologies
 
 - Python
 - Flask
-- MariaDB
-- MySQL Connector
+- MySQL 8.0
+- Docker
+- Docker Compose
+- HTML
+- Bootstrap
+- Jinja2 Templates
+- SMTP Email Service
 - Pytest
-- Docker (Planned)
-- Linux
-- Flask-Mail
-- python-dotenv
+
+---
+
+# Summary
+
+DeliveryHub Admin Management Portal provides a complete administrative interface for:
+
+- Application Onboarding
+- Authentication Monitoring
+- Shipment Creation & Tracking
+- Shipment Label Management
+- Email Notification Services
+- Secure Application Access Control
+
+The system is fully containerized using Docker, integrated with MySQL, secured through token-based authentication mechanisms, and designed for future scalability through Kubernetes and production-grade monitoring solutions.
+
 
