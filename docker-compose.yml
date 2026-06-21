@@ -1,0 +1,29 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: deliveryhub_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: deliveryhub_dev
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+  app-manager:
+    build: .
+    container_name: deliveryhub_app_manager
+    restart: always
+    ports:
+      - "5001:5001"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    volumes:
+      - ./uploads:/app/uploads
+
+volumes:
+  mysql_data:

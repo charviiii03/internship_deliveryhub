@@ -902,14 +902,18 @@ def admin_ui_create_shipment():
     receiver_phone_code = request.form.get("receiver_phone_code")
     receiver_phone = request.form.get("receiver_phone")
 
-    from_address = request.form.get("from_address")
+    # HTML may send from_address OR from_address1
+    from_address1 = request.form.get("from_address1") or request.form.get("from_address")
+    from_address2 = request.form.get("from_address2")
     from_city = request.form.get("from_city")
     from_state = request.form.get("from_state")
     from_country = request.form.get("from_country")
     from_country_code = request.form.get("from_country_code")
     from_postal_code = request.form.get("from_postal_code")
 
-    to_address = request.form.get("to_address")
+    # HTML may send to_address OR to_address1
+    to_address1 = request.form.get("to_address1") or request.form.get("to_address")
+    to_address2 = request.form.get("to_address2")
     to_city = request.form.get("to_city")
     to_state = request.form.get("to_state")
     to_country = request.form.get("to_country")
@@ -920,8 +924,10 @@ def admin_ui_create_shipment():
 
     def validate_country_rules(country, country_code, phone_code, phone_number, postal_code, user_type):
 
-        if country == "India":
+        if not country or not country_code or not phone_code or not phone_number or not postal_code:
+            return f"{user_type} details are missing"
 
+        if country == "India":
             if country_code != "IN":
                 return f"{user_type} country code must be IN"
 
@@ -935,7 +941,6 @@ def admin_ui_create_shipment():
                 return f"{user_type} India postal code must be 6 digits"
 
         elif country == "USA":
-
             if country_code != "US":
                 return f"{user_type} country code must be US"
 
@@ -977,121 +982,142 @@ def admin_ui_create_shipment():
     if receiver_error:
         return receiver_error
 
+    if not from_address1:
+        return "Sender address is required"
+
+    if not to_address1:
+        return "Receiver address is required"
+
     requestid = str(uuid.uuid4())
 
     connection = get_db_connection()
+
+    if connection is None:
+        return "Database connection failed"
+
     cursor = connection.cursor()
 
-    cursor.execute("""
-        INSERT INTO customers(full_name, phone_number, email)
-        VALUES (%s, %s, %s)
-    """, (
-        sender_name,
-        sender_phone_code + " " + sender_phone,
-        sender_email
-    ))
+    try:
+        cursor.execute("""
+            INSERT INTO customers(full_name, phone_number, email)
+            VALUES (%s, %s, %s)
+        """, (
+            sender_name,
+            sender_phone_code + " " + sender_phone,
+            sender_email
+        ))
 
-    sender_customer_id = cursor.lastrowid
+        sender_customer_id = cursor.lastrowid
 
-    cursor.execute("""
-        INSERT INTO customers(full_name, phone_number, email)
-        VALUES (%s, %s, %s)
-    """, (
-        receiver_name,
-        receiver_phone_code + " " + receiver_phone,
-        receiver_email
-    ))
+        cursor.execute("""
+            INSERT INTO customers(full_name, phone_number, email)
+            VALUES (%s, %s, %s)
+        """, (
+            receiver_name,
+            receiver_phone_code + " " + receiver_phone,
+            receiver_email
+        ))
 
-    receiver_customer_id = cursor.lastrowid
+        receiver_customer_id = cursor.lastrowid
 
-    cursor.execute("""
-        INSERT INTO addresses(
-            address_line,
-            city,
-            state,
-            country,
-            country_code,
-            postal_code
-        )
-        VALUES (%s, %s, %s, %s, %s, %s)
-    """, (
-        from_address,
-        from_city,
-        from_state,
-        from_country,
-        from_country_code,
-        from_postal_code
-    ))
+        cursor.execute("""
+            INSERT INTO addresses(
+                address_line1,
+                address_line2,
+                city,
+                state_name,
+                country,
+                country_code,
+                postal_code
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (
+            from_address1,
+            from_address2,
+            from_city,
+            from_state,
+            from_country,
+            from_country_code,
+            from_postal_code
+        ))
 
-    from_address_id = cursor.lastrowid
+        from_address_id = cursor.lastrowid
 
-    cursor.execute("""
-        INSERT INTO addresses(
-            address_line,
-            city,
-            state,
-            country,
-            country_code,
-            postal_code
-        )
-        VALUES (%s, %s, %s, %s, %s, %s)
-    """, (
-        to_address,
-        to_city,
-        to_state,
-        to_country,
-        to_country_code,
-        to_postal_code
-    ))
+        cursor.execute("""
+            INSERT INTO addresses(
+                address_line1,
+                address_line2,
+                city,
+                state_name,
+                country,
+                country_code,
+                postal_code
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (
+            to_address1,
+            to_address2,
+            to_city,
+            to_state,
+            to_country,
+            to_country_code,
+            to_postal_code
+        ))
 
-    to_address_id = cursor.lastrowid
+        to_address_id = cursor.lastrowid
 
-    cursor.execute("""
-        INSERT INTO shipments(
+        cursor.execute("""
+            INSERT INTO shipments(
+                requestid,
+                sender_customer_id,
+                receiver_customer_id,
+                from_address_id,
+                to_address_id,
+                service,
+                validation_status,
+                validation_reason,
+                state,
+                return_code
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
             requestid,
             sender_customer_id,
             receiver_customer_id,
             from_address_id,
             to_address_id,
             service,
-            validation_status,
-            validation_reason,
-            state,
-            return_code
-        )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """, (
-        requestid,
-        sender_customer_id,
-        receiver_customer_id,
-        from_address_id,
-        to_address_id,
-        service,
-        "valid",
-        "No issues",
-        "initiated",
-        200
-    ))
+            "valid",
+            "No issues",
+            "initiated",
+            200
+        ))
 
-    shipment_id = cursor.lastrowid
+        shipment_id = cursor.lastrowid
 
-    cursor.execute("""
-        INSERT INTO shipment_tracking(
+        cursor.execute("""
+            INSERT INTO shipment_tracking(
+                shipment_id,
+                current_status
+            )
+            VALUES (%s, %s)
+        """, (
             shipment_id,
-            current_status
-        )
-        VALUES (%s, %s)
-    """, (
-        shipment_id,
-        "initiated"
-    ))
+            "initiated"
+        ))
 
-    connection.commit()
+        connection.commit()
 
-    cursor.close()
-    connection.close()
+    except Exception as e:
+        connection.rollback()
+        return f"Shipment creation failed: {str(e)}"
+
+    finally:
+        cursor.close()
+        connection.close()
 
     return admin_ui_shipments()
+
 @app.route("/admin-ui/applications")
 def admin_ui_applications():
 
@@ -1124,5 +1150,6 @@ def admin_ui_applications():
 if __name__ == "__main__":
     app.run(
         debug=True,
-        port=5001
+        port=5001,
+        host="0.0.0.0"
     )
