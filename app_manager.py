@@ -570,33 +570,42 @@ def signin():
 # -----------------------------
 # ADMIN DASHBOARD UI
 # -----------------------------
+
 @app.route("/admin-ui")
 def admin_dashboard():
-    return render_template("admin_dashboard.html")
-
-# -------------------------------
-# VIEW APPLICATIONS - ADMIN UI 
-# -------------------------------
-
-@app.route("/admin-ui/applications")
-def admin_ui_applications():
 
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
 
-    cursor.execute("""
-        SELECT application_id, application_name, user_email, expiry_date, is_active
-        FROM applications
-    """)
+    cursor.execute("SELECT COUNT(*) AS count FROM applications")
+    total_applications = cursor.fetchone()["count"]
 
-    applications = cursor.fetchall()
+    cursor.execute("""
+        SELECT COUNT(*) AS count
+        FROM authentication_logs
+        WHERE status = 'success'
+    """)
+    valid_auth = cursor.fetchone()["count"]
+
+    cursor.execute("""
+        SELECT COUNT(*) AS count
+        FROM authentication_logs
+        WHERE status = 'failure'
+    """)
+    invalid_auth = cursor.fetchone()["count"]
+
+    cursor.execute("SELECT COUNT(*) AS count FROM shipments")
+    total_shipments = cursor.fetchone()["count"]
 
     cursor.close()
     connection.close()
 
     return render_template(
-        "applications.html",
-        applications=applications
+        "admin_dashboard.html",
+        total_applications=total_applications,
+        valid_auth=valid_auth,
+        invalid_auth=invalid_auth,
+        total_shipments=total_shipments
     )
 
 # -------------------------------
@@ -733,15 +742,47 @@ def admin_ui_shipments():
 
     cursor.execute("""
         SELECT
-            shipment_id,
-            requestid,
-            service,
-            validation_status,
-            validation_reason,
-            state,
-            return_code
-        FROM shipments
-        ORDER BY shipment_id DESC
+            s.shipment_id,
+            s.requestid,
+            s.service,
+            s.validation_status,
+            s.validation_reason,
+            s.state,
+            s.return_code,
+            s.created_at,
+
+            sender.full_name AS sender_name,
+            sender.email AS sender_email,
+
+            receiver.full_name AS receiver_name,
+            receiver.email AS receiver_email,
+
+            from_addr.country AS from_country,
+            to_addr.country AS to_country,
+
+            CASE
+                WHEN sl.label_id IS NOT NULL THEN 'uploaded'
+                ELSE 'pending'
+            END AS label_status
+
+        FROM shipments s
+
+        JOIN customers sender
+            ON s.sender_customer_id = sender.customer_id
+
+        JOIN customers receiver
+            ON s.receiver_customer_id = receiver.customer_id
+
+        JOIN addresses from_addr
+            ON s.from_address_id = from_addr.address_id
+
+        JOIN addresses to_addr
+            ON s.to_address_id = to_addr.address_id
+
+        LEFT JOIN shipment_labels sl
+            ON s.shipment_id = sl.shipment_id
+
+        ORDER BY s.shipment_id DESC
     """)
 
     shipments = cursor.fetchall()
@@ -757,17 +798,40 @@ def admin_ui_shipments():
 def admin_ui_upload_label():
 
     if request.method == "GET":
-        return render_template("upload_label.html")
+        shipment_id = request.args.get("shipment_id")
+        return render_template(
+            "upload_label.html",
+            shipment_id=shipment_id
+        )
 
     shipment_id = request.form.get("shipment_id")
-    customer_email = request.form.get("customer_email")
     label_file = request.files.get("label_file")
 
-    if not shipment_id or not customer_email or not label_file:
-        return "Shipment ID, customer email and PDF file are required"
+    if not shipment_id or not label_file:
+        return "Shipment ID and PDF file are required"
 
     if not label_file.filename.lower().endswith(".pdf"):
         return "Only PDF files are allowed"
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT c.email
+        FROM shipments s
+        JOIN customers c
+            ON s.receiver_customer_id = c.customer_id
+        WHERE s.shipment_id = %s
+    """, (shipment_id,))
+
+    receiver = cursor.fetchone()
+
+    if not receiver or not receiver[0]:
+        cursor.close()
+        connection.close()
+        return "Receiver email not found for this shipment"
+
+    customer_email = receiver[0]
 
     upload_folder = "uploads"
     os.makedirs(upload_folder, exist_ok=True)
@@ -776,9 +840,6 @@ def admin_ui_upload_label():
     file_path = os.path.join(upload_folder, filename)
 
     label_file.save(file_path)
-
-    connection = get_db_connection()
-    cursor = connection.cursor()
 
     cursor.execute("""
         INSERT INTO shipment_labels
@@ -823,11 +884,7 @@ def admin_ui_upload_label():
     cursor.close()
     connection.close()
 
-    return """
-    <h2>Label Uploaded Successfully</h2>
-    <p>PDF saved and email notification attempted.</p>
-    <a href="/admin-ui/shipments">Back to Shipments</a>
-    """
+    return admin_ui_shipments()
 
 @app.route("/admin-ui/create-shipment", methods=["GET", "POST"])
 def admin_ui_create_shipment():
@@ -1035,7 +1092,32 @@ def admin_ui_create_shipment():
     connection.close()
 
     return admin_ui_shipments()
+@app.route("/admin-ui/applications")
+def admin_ui_applications():
 
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT
+            application_id,
+            application_name,
+            user_email,
+            expiry_date,
+            is_active
+        FROM applications
+        ORDER BY created_at DESC
+    """)
+
+    applications = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return render_template(
+        "applications.html",
+        applications=applications
+    )
 # -----------------------------
 # RUN APP MANAGER
 # -----------------------------

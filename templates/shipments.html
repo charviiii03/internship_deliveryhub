@@ -100,6 +100,7 @@
             font-size: 13px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            white-space: nowrap;
         }
 
         .table td {
@@ -140,6 +141,29 @@
             font-weight: 600;
             font-size: 12px;
         }
+
+        .label-uploaded {
+            background: #dcfce7;
+            color: #15803d;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .label-pending {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .small-email {
+            color: #64748b;
+            font-size: 12px;
+        }
     </style>
 </head>
 
@@ -171,9 +195,7 @@
         <a href="/admin-ui/shipments" class="active">
             <i class="fa-solid fa-truck"></i> Shipments
         </a>
-        <a href="/admin-ui/create-shipment" class="btn btn-primary px-4 me-2">
-            <i class="fa-solid fa-plus me-2"></i> Add Shipment
-        </a>
+
         <a href="/admin-ui/upload-label">
             <i class="fa-solid fa-file-arrow-up"></i> Upload Label
         </a>
@@ -185,14 +207,21 @@
             <div>
                 <h1 class="fw-bold mb-1">Shipment Requests</h1>
                 <p class="text-muted mb-0">
-                    View valid, invalid, processed and label-uploaded shipment requests.
+                    View sender, receiver, route, validation and label status.
                 </p>
             </div>
 
-            <a href="/admin-ui/upload-label" class="btn btn-dark px-4">
-                <i class="fa-solid fa-file-arrow-up me-2"></i>
-                Upload Label
-            </a>
+            <div>
+                <a href="/admin-ui/create-shipment" class="btn btn-primary px-4 me-2">
+                    <i class="fa-solid fa-plus me-2"></i>
+                    Add Shipment
+                </a>
+
+                <a href="/admin-ui/upload-label" class="btn btn-dark px-4">
+                    <i class="fa-solid fa-file-arrow-up me-2"></i>
+                    Upload Label
+                </a>
+            </div>
         </div>
 
         <div class="row g-4 mb-4">
@@ -238,7 +267,7 @@
                     </div>
                     <p class="text-muted mb-1">Labels Uploaded</p>
                     <h2 class="fw-bold">
-                        {{ shipments|selectattr("state", "equalto", "label_uploaded")|list|length }}
+                        {{ shipments|selectattr("label_status", "equalto", "uploaded")|list|length }}
                     </h2>
                 </div>
             </div>
@@ -265,11 +294,13 @@
                         <tr>
                             <th>Shipment ID</th>
                             <th>Request ID</th>
+                            <th>Sender</th>
+                            <th>Receiver</th>
+                            <th>Route</th>
                             <th>Service</th>
                             <th>Validation</th>
-                            <th>Reason</th>
+                            <th>Label Status</th>
                             <th>State</th>
-                            <th>Return Code</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -286,6 +317,20 @@
                             </td>
 
                             <td>
+                                <strong>{{ shipment.sender_name }}</strong><br>
+                                <span class="small-email">{{ shipment.sender_email }}</span>
+                            </td>
+
+                            <td>
+                                <strong>{{ shipment.receiver_name }}</strong><br>
+                                <span class="small-email">{{ shipment.receiver_email }}</span>
+                            </td>
+
+                            <td>
+                                {{ shipment.from_country }} → {{ shipment.to_country }}
+                            </td>
+
+                            <td>
                                 {{ shipment.service }}
                             </td>
 
@@ -298,10 +343,10 @@
                             </td>
 
                             <td>
-                                {% if shipment.validation_reason %}
-                                    {{ shipment.validation_reason }}
+                                {% if shipment.label_status == "uploaded" %}
+                                    <span class="label-uploaded">Label Uploaded</span>
                                 {% else %}
-                                    <span class="text-muted">No issues</span>
+                                    <span class="label-pending">Pending</span>
                                 {% endif %}
                             </td>
 
@@ -312,18 +357,14 @@
                             </td>
 
                             <td>
-                                {{ shipment.return_code }}
-                            </td>
-
-                            <td>
-                                {% if shipment.validation_status == "valid" %}
-                                    <a href="/admin-ui/upload-label"
+                                {% if shipment.label_status == "pending" and shipment.validation_status == "valid" %}
+                                    <a href="/admin-ui/upload-label?shipment_id={{ shipment.shipment_id }}"
                                        class="btn btn-primary btn-sm">
                                         Upload Label
                                     </a>
                                 {% else %}
                                     <button class="btn btn-secondary btn-sm" disabled>
-                                        Not Allowed
+                                        Done
                                     </button>
                                 {% endif %}
                             </td>
