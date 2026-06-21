@@ -484,8 +484,8 @@ def update_expiry():
     data = request.get_json()
 
     application_id = data.get(
-        "application_id"
-    )
+    "application_id"
+    ).strip()
 
     new_expiry_date = data.get(
         "expiry_date"
@@ -708,7 +708,7 @@ def admin_ui_create_application():
     connection.commit()
 
     try:
-        send_application_credentials(
+        send_onboarding_email(
             app,
             user_email,
             application_id,

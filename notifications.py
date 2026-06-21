@@ -1,6 +1,5 @@
 # notifications.py
 
-```python
 # -----------------------------
 # EMAIL SERVICE
 # -----------------------------
@@ -249,30 +248,36 @@ def send_report_email(
         revenue,
         report_date):
 
+    conversion_rate = 0
+
+    if total_enquiries > 0:
+        conversion_rate = round(
+            (successful_customers / total_enquiries) * 100,
+            2
+        )
+
+    average_revenue = 0
+
+    if successful_customers > 0:
+        average_revenue = round(
+            revenue / successful_customers,
+            2
+        )
+
     send_email(
         app,
         recipient_email,
         "ParcelMyBox Business Report",
         "report_email.md",
         {
-
-            "total_enquiries":
-            total_enquiries,
-
-            "successful_customers":
-            successful_customers,
-
-            "revenue":
-            revenue,
-
-            "report_date":
-            report_date,
-
-            "company_name":
-            COMPANY_NAME,
-
-            "company_website":
-            COMPANY_WEBSITE
+            "report_date": report_date,
+            "total_enquiries": total_enquiries,
+            "successful_customers": successful_customers,
+            "conversion_rate": conversion_rate,
+            "revenue": revenue,
+            "average_revenue": average_revenue,
+            "company_website": app.config["COMPANY_WEBSITE"],
+            "sender_name": app.config["SENDER_NAME"],
+            "company_name": app.config["COMPANY_NAME"]
         }
     )
-```
