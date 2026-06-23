@@ -8,162 +8,233 @@
 
     <style>
         body {
-            background: #f7f9fc;
-            font-family: Arial, sans-serif;
-        }
+    background: #f7f9fc;
+    font-family: Arial, sans-serif;
+}
 
-        .sidebar {
-            width: 260px;
-            min-height: 100vh;
-            background: white;
-            border-right: 1px solid #e5e7eb;
-            padding: 24px;
-        }
+.sidebar {
+    width: 210px;
+    min-height: 100vh;
+    background: white;
+    border-right: 1px solid #e5e7eb;
+    padding: 18px;
+}
 
-        .sidebar-logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 35px;
-        }
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 35px;
+}
 
-        .sidebar-logo img {
-            width: 46px;
-            height: 46px;
-            border-radius: 14px;
-            object-fit: cover;
-        }
+.sidebar-logo img {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    object-fit: cover;
+}
 
-        .sidebar-title {
-            font-weight: 700;
-            font-size: 20px;
-        }
+.sidebar-title {
+    font-weight: 700;
+    font-size: 20px;
+}
 
-        .sidebar-small {
-            font-size: 11px;
-            color: #6b7280;
-            letter-spacing: 1px;
-        }
+.sidebar-small {
+    font-size: 11px;
+    color: #6b7280;
+    letter-spacing: 1px;
+}
 
-        .sidebar a {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: #374151;
-            text-decoration: none;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            font-weight: 500;
-        }
+.sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #374151;
+    text-decoration: none;
+    padding: 12px 14px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
 
-        .sidebar a:hover,
-        .sidebar .active {
-            background: #2563eb;
-            color: white;
-        }
+.sidebar a:hover,
+.sidebar .active {
+    background: #2563eb;
+    color: white;
+}
 
-        .main-content {
-            flex: 1;
-            padding: 32px;
-        }
+.main-content {
+    flex: 1;
+    padding: 28px;
+    min-width: 0;
+    overflow-x: hidden;
+}
 
-        .stat-card {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 18px;
-            padding: 22px;
-            box-shadow: 0 8px 24px rgba(15,23,42,0.06);
-        }
+.table-responsive {
+    overflow-x: auto;
+}
 
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            margin-bottom: 14px;
-        }
+.table {
+    width: 100%;
+    table-layout: fixed;
+}
 
-        .page-card {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 18px;
-            box-shadow: 0 8px 24px rgba(15,23,42,0.06);
-        }
+.table thead th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: normal;
+}
 
-        .table thead th {
-            background: #f8fafc;
-            color: #475569;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-        }
+.table th,
+.table td {
+    font-size: 13px;
+    padding: 12px 8px;
+    white-space: normal;
+    word-break: break-word;
+}
 
-        .table td {
-            vertical-align: middle;
-            font-size: 14px;
-        }
+.table td {
+    vertical-align: middle;
+}
 
-        .request-id {
-            max-width: 220px;
-            word-break: break-all;
-            font-size: 13px;
-            color: #475569;
-        }
+.stat-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 8px 24px rgba(15,23,42,0.06);
+}
 
-        .status-valid {
-            background: #dcfce7;
-            color: #15803d;
-            padding: 6px 12px;
-            border-radius: 999px;
-            font-weight: 600;
-            font-size: 12px;
-        }
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 14px;
+}
 
-        .status-invalid {
-            background: #fee2e2;
-            color: #b91c1c;
-            padding: 6px 12px;
-            border-radius: 999px;
-            font-weight: 600;
-            font-size: 12px;
-        }
+.page-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(15,23,42,0.06);
+}
 
-        .state-badge {
-            background: #e0f2fe;
-            color: #0369a1;
-            padding: 6px 12px;
-            border-radius: 999px;
-            font-weight: 600;
-            font-size: 12px;
-        }
+.request-id {
+    max-width: 120px;
+    font-size: 12px;
+    word-break: break-word;
+    color: #475569;
+}
 
-        .label-uploaded {
-            background: #dcfce7;
-            color: #15803d;
-            padding: 6px 12px;
-            border-radius: 999px;
-            font-weight: 600;
-            font-size: 12px;
-        }
+.status-valid {
+    background: #dcfce7;
+    color: #15803d;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 12px;
+}
 
-        .label-pending {
-            background: #fef3c7;
-            color: #92400e;
-            padding: 6px 12px;
-            border-radius: 999px;
-            font-weight: 600;
-            font-size: 12px;
-        }
+.status-invalid {
+    background: #fee2e2;
+    color: #b91c1c;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 12px;
+}
 
-        .small-email {
-            color: #64748b;
-            font-size: 12px;
-        }
+.state-badge {
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.label-uploaded {
+    background: #dcfce7;
+    color: #15803d;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.label-pending {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.small-email {
+    font-size: 11px;
+    color: #64748b;
+    display: block;
+    word-break: break-word;
+}
+
+.btn-sm {
+    font-size: 11px;
+    padding: 5px 8px;
+}
+
+.action-buttons .btn {
+    width: 95px;
+    font-size: 11px;
+    padding: 6px 8px;
+}
+.shipment-table th:nth-child(1),
+.shipment-table td:nth-child(1) {
+    width: 7%;
+}
+
+.shipment-table th:nth-child(2),
+.shipment-table td:nth-child(2) {
+    width: 10%;
+}
+
+.shipment-table th:nth-child(3),
+.shipment-table td:nth-child(3),
+.shipment-table th:nth-child(4),
+.shipment-table td:nth-child(4) {
+    width: 12%;
+}
+
+.shipment-table th:nth-child(5),
+.shipment-table td:nth-child(5) {
+    width: 8%;
+}
+
+.shipment-table th:nth-child(6),
+.shipment-table td:nth-child(6) {
+    width: 10%;
+}
+
+.shipment-table th:nth-child(7),
+.shipment-table td:nth-child(7),
+.shipment-table th:nth-child(8),
+.shipment-table td:nth-child(8),
+.shipment-table th:nth-child(9),
+.shipment-table td:nth-child(9) {
+    width: 9%;
+}
+
+.shipment-table th:nth-child(10),
+.shipment-table td:nth-child(10) {
+    width: 8%;
+}
     </style>
 </head>
 
@@ -211,15 +282,15 @@
                 </p>
             </div>
 
-            <div>
-                <a href="/admin-ui/create-shipment" class="btn btn-primary px-4 me-2">
-                    <i class="fa-solid fa-plus me-2"></i>
-                    Add Shipment
+            <div class="d-flex gap-2 flex-wrap justify-content-end">
+                <a href="/admin-ui/create-shipment-from-text" class="btn btn-dark px-4">
+                    <i class="fa-solid fa-wand-magic-sparkles me-2"></i>
+                    Add via Text
                 </a>
 
-                <a href="/admin-ui/upload-label" class="btn btn-dark px-4">
-                    <i class="fa-solid fa-file-arrow-up me-2"></i>
-                    Upload Label
+                <a href="/admin-ui/create-shipment" class="btn btn-primary px-4">
+                    <i class="fa-solid fa-plus me-2"></i>
+                    Add Shipment
                 </a>
             </div>
         </div>
@@ -289,7 +360,7 @@
 
             <div class="table-responsive">
 
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0 shipment-table">
                     <thead>
                         <tr>
                             <th>Shipment ID</th>
@@ -300,8 +371,7 @@
                             <th>Service</th>
                             <th>Validation</th>
                             <th>Label Status</th>
-                            <th>State</th>
-                            <th>Action</th>
+                            <th class="text-center">Action</th>
                         </tr>
                     </thead>
 
@@ -351,23 +421,43 @@
                             </td>
 
                             <td>
-                                <span class="state-badge">
-                                    {{ shipment.state }}
-                                </span>
-                            </td>
+    <div class="action-buttons">
 
-                            <td>
-                                {% if shipment.label_status == "pending" and shipment.validation_status == "valid" %}
-                                    <a href="/admin-ui/upload-label?shipment_id={{ shipment.shipment_id }}"
-                                       class="btn btn-primary btn-sm">
-                                        Upload Label
-                                    </a>
-                                {% else %}
-                                    <button class="btn btn-secondary btn-sm" disabled>
-                                        Done
-                                    </button>
-                                {% endif %}
-                            </td>
+        {% if shipment.label_status == "uploaded" %}
+
+            <a href="/admin-ui/view-label/{{ shipment.shipment_id }}"
+               target="_blank"
+               class="btn btn-success btn-sm">
+                View Label
+            </a>
+
+            <a href="/admin-ui/upload-label?shipment_id={{ shipment.shipment_id }}"
+               class="btn btn-warning btn-sm">
+                Replace
+            </a>
+
+        {% elif shipment.validation_status == "valid" %}
+
+            <a href="/admin-ui/upload-label?shipment_id={{ shipment.shipment_id }}"
+               class="btn btn-primary btn-sm">
+                Upload
+            </a>
+
+        {% else %}
+
+            <button class="btn btn-secondary btn-sm" disabled>
+                Invalid
+            </button>
+
+        {% endif %}
+
+        <a href="/admin-ui/edit-shipment/{{ shipment.shipment_id }}"
+           class="btn btn-outline-dark btn-sm">
+            Edit
+        </a>
+
+    </div>
+</td>
                         </tr>
                     {% endfor %}
                     </tbody>
