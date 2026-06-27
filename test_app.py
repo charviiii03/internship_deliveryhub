@@ -1,4 +1,4 @@
-from app import app
+from docshipp import app
 
 def test_valid_text():
 
@@ -87,9 +87,8 @@ def test_sql_injection():
 
     response = client.post(
         "/validate",
-        json={"text": "DROP TABLE users"} 
-        #This is a common SQL injection payload.
+        json={"text": "DROP TABLE users"}
     )
 
-    assert response.status_code ==400
+    assert response.status_code == 400
     assert response.get_json()["status"] == "invalid"

@@ -6,14 +6,16 @@ import uuid
 # -----------------------------
 # Used to send application
 # credentials to applicants
-from flask import send_from_directory
+
 from notifications import (
     mail,
-    send_application_credentials
+    send_onboarding_email,
+    send_renewal_email,
+    send_inactive_email
 )
+
 import os
 
-from flask import send_file
 from dotenv import load_dotenv
 
 # generates secure random tokens
@@ -27,16 +29,17 @@ from werkzeug.security import (
     generate_password_hash,
     check_password_hash
 )
-
 from werkzeug.utils import secure_filename
 from notifications import send_label_notification
-from notifications import (
-    mail,
-    send_application_credentials,
-    send_label_notification
+
+from flask import (
+    Flask,
+    request,
+    jsonify,
+    render_template,
+    send_file
 )
 
-from flask import Flask, request, jsonify, render_template
 from db import get_db_connection
 
 app = Flask(__name__)
@@ -318,7 +321,7 @@ def signup():
     # credentials to applicant email
 
     try:
-        send_application_credentials(
+        send_onboarding_email(
         app,
         user_email,
         application_id,
@@ -417,7 +420,23 @@ def update_status():
             "reason": "database unavailable"
         }), 500
 
-    cursor = connection.cursor()
+    cursor = connection.cursor(
+        dictionary=True
+    )
+
+    # Fetch application details
+    # for notification email
+
+    cursor.execute("""
+        SELECT
+            user_email
+        FROM applications
+        WHERE application_id = %s
+    """, (
+        application_id,
+    ))
+
+    application = cursor.fetchone()
 
     cursor.execute("""
         UPDATE applications
@@ -430,6 +449,30 @@ def update_status():
 
     connection.commit()
 
+    # Send inactive notification
+    # only when application
+    # is disabled
+
+    if (
+        application
+        and not is_active
+    ):
+
+        try:
+
+            send_inactive_email(
+                app,
+                application["user_email"],
+                application_id
+            )
+
+        except Exception as e:
+
+            print(
+                "Inactive email failed:",
+                e
+            )
+
     cursor.close()
     connection.close()
 
@@ -437,7 +480,6 @@ def update_status():
         "status": "success",
         "message": "application status updated"
     }), 200
-
 
 # -----------------------------
 # UPDATE EXPIRY DATE
@@ -451,8 +493,8 @@ def update_expiry():
     data = request.get_json()
 
     application_id = data.get(
-        "application_id"
-    )
+    "application_id"
+    ).strip()
 
     new_expiry_date = data.get(
         "expiry_date"
@@ -467,7 +509,23 @@ def update_expiry():
             "reason": "database unavailable"
         }), 500
 
-    cursor = connection.cursor()
+    cursor = connection.cursor(
+        dictionary=True
+    )
+
+    # Fetch application details
+    # for renewal notification
+
+    cursor.execute("""
+        SELECT
+            user_email
+        FROM applications
+        WHERE application_id = %s
+    """, (
+        application_id,
+    ))
+
+    application = cursor.fetchone()
 
     cursor.execute("""
         UPDATE applications
@@ -480,6 +538,29 @@ def update_expiry():
 
     connection.commit()
 
+    # Send renewal email
+
+    if application:
+        print("APPLICATION =", application)
+        print("APPLICATION TYPE =", type(application))
+
+        try:
+            print("ATTEMPTING TO SEND RENEWAL EMAIL")
+
+            send_renewal_email(
+                app,
+                application["user_email"],
+                application_id,
+                new_expiry_date
+            )
+
+        except Exception as e:
+
+            print(
+                "Renewal email failed:",
+                e
+            )
+
     cursor.close()
     connection.close()
 
@@ -487,7 +568,6 @@ def update_expiry():
         "status": "success",
         "message": "expiry date updated"
     }), 200
-
 
 # -----------------------------
 # VIEW AUTH LOGS
@@ -646,7 +726,7 @@ def admin_ui_create_application():
     connection.commit()
 
     try:
-        send_application_credentials(
+        send_onboarding_email(
             app,
             user_email,
             application_id,
@@ -855,16 +935,10 @@ def admin_ui_upload_label():
     ))
 
     cursor.execute("""
-    UPDATE shipments
-    SET
-        label_status='uploaded',
-        label_file_name=%s,
-        state='label_uploaded'
-    WHERE shipment_id=%s
-""", (
-    filename,
-    shipment_id
-))
+        UPDATE shipments
+        SET state = 'label_uploaded'
+        WHERE shipment_id = %s
+    """, (shipment_id,))
 
     connection.commit()
 
@@ -893,12 +967,72 @@ def admin_ui_upload_label():
     connection.close()
 
     return admin_ui_shipments()
+@app.route("/admin-ui/customer/<int:customer_id>")
+def get_customer(customer_id):
+
+    connection = get_db_connection()
+
+    cursor = connection.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT
+            customer_id,
+            full_name,
+            email,
+            phone_number
+        FROM customers
+        WHERE customer_id = %s
+    """, (customer_id,))
+
+    customer = cursor.fetchone()
+
+    cursor.close()
+    connection.close()
+
+    if customer:
+        return jsonify(customer)
+
+    return jsonify({
+        "error": "Customer not found"
+    }), 404
 
 @app.route("/admin-ui/create-shipment", methods=["GET", "POST"])
 def admin_ui_create_shipment():
 
     if request.method == "GET":
-        return render_template("create_shipment.html")
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT id, application_name
+            FROM applications
+            WHERE is_active = TRUE
+            ORDER BY application_name
+        """)
+
+        applications = cursor.fetchall()
+        print(applications)
+        cursor.execute("""
+            SELECT
+                customer_id,
+                full_name,
+                email,
+                phone_number
+            FROM customers
+            ORDER BY full_name
+        """)
+
+        customers = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        return render_template(
+            "create_shipment.html",
+            applications=applications,
+            customers=customers
+        )
+        
 
     sender_name = request.form.get("sender_name")
     sender_email = request.form.get("sender_email")
@@ -910,18 +1044,14 @@ def admin_ui_create_shipment():
     receiver_phone_code = request.form.get("receiver_phone_code")
     receiver_phone = request.form.get("receiver_phone")
 
-    # HTML may send from_address OR from_address1
-    from_address1 = request.form.get("from_address1") or request.form.get("from_address")
-    from_address2 = request.form.get("from_address2")
+    from_address = request.form.get("from_address")
     from_city = request.form.get("from_city")
     from_state = request.form.get("from_state")
     from_country = request.form.get("from_country")
     from_country_code = request.form.get("from_country_code")
     from_postal_code = request.form.get("from_postal_code")
 
-    # HTML may send to_address OR to_address1
-    to_address1 = request.form.get("to_address1") or request.form.get("to_address")
-    to_address2 = request.form.get("to_address2")
+    to_address = request.form.get("to_address")
     to_city = request.form.get("to_city")
     to_state = request.form.get("to_state")
     to_country = request.form.get("to_country")
@@ -929,13 +1059,12 @@ def admin_ui_create_shipment():
     to_postal_code = request.form.get("to_postal_code")
 
     service = request.form.get("service")
+    application_id = request.form.get("application_id")
 
     def validate_country_rules(country, country_code, phone_code, phone_number, postal_code, user_type):
 
-        if not country or not country_code or not phone_code or not phone_number or not postal_code:
-            return f"{user_type} details are missing"
-
         if country == "India":
+
             if country_code != "IN":
                 return f"{user_type} country code must be IN"
 
@@ -949,6 +1078,7 @@ def admin_ui_create_shipment():
                 return f"{user_type} India postal code must be 6 digits"
 
         elif country == "USA":
+
             if country_code != "US":
                 return f"{user_type} country code must be US"
 
@@ -990,142 +1120,127 @@ def admin_ui_create_shipment():
     if receiver_error:
         return receiver_error
 
-    if not from_address1:
-        return "Sender address is required"
-
-    if not to_address1:
-        return "Receiver address is required"
-
     requestid = str(uuid.uuid4())
 
     connection = get_db_connection()
-
-    if connection is None:
-        return "Database connection failed"
-
     cursor = connection.cursor()
 
-    try:
-        cursor.execute("""
-            INSERT INTO customers(full_name, phone_number, email)
-            VALUES (%s, %s, %s)
-        """, (
-            sender_name,
-            sender_phone_code + " " + sender_phone,
-            sender_email
-        ))
+    cursor.execute("""
+        INSERT INTO customers(full_name, phone_number, email)
+        VALUES (%s, %s, %s)
+    """, (
+        sender_name,
+        sender_phone_code + " " + sender_phone,
+        sender_email
+    ))
 
-        sender_customer_id = cursor.lastrowid
+    sender_customer_id = cursor.lastrowid
 
-        cursor.execute("""
-            INSERT INTO customers(full_name, phone_number, email)
-            VALUES (%s, %s, %s)
-        """, (
-            receiver_name,
-            receiver_phone_code + " " + receiver_phone,
-            receiver_email
-        ))
+    cursor.execute("""
+        INSERT INTO customers(full_name, phone_number, email)
+        VALUES (%s, %s, %s)
+    """, (
+        receiver_name,
+        receiver_phone_code + " " + receiver_phone,
+        receiver_email
+    ))
 
-        receiver_customer_id = cursor.lastrowid
+    receiver_customer_id = cursor.lastrowid
 
-        cursor.execute("""
-            INSERT INTO addresses(
-                address_line1,
-                address_line2,
-                city,
-                state_name,
-                country,
-                country_code,
-                postal_code
-            )
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (
-            from_address1,
-            from_address2,
-            from_city,
-            from_state,
-            from_country,
-            from_country_code,
-            from_postal_code
-        ))
+    cursor.execute("""
+        INSERT INTO addresses(
+           address_line1,
+            address_line2,
+            city,
+            state_name,
+            country,
+            country_code,
+            postal_code
+        )
+        VALUES (%s, %s, %s, %s, %s, %s,%s)
+    """, (
+        from_address,
+        None,
+        from_city,
+        from_state,
+        from_country,
+        from_country_code,
+        from_postal_code
+    ))
 
-        from_address_id = cursor.lastrowid
+    from_address_id = cursor.lastrowid
 
-        cursor.execute("""
-            INSERT INTO addresses(
-                address_line1,
-                address_line2,
-                city,
-                state_name,
-                country,
-                country_code,
-                postal_code
-            )
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (
-            to_address1,
-            to_address2,
-            to_city,
-            to_state,
-            to_country,
-            to_country_code,
-            to_postal_code
-        ))
+    cursor.execute("""
+        INSERT INTO addresses(
+            address_line1,
+            address_line2,
+            city,
+            state_name,
+            country,
+            country_code,
+            postal_code
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+    """, (
+        to_address,
+        None,
+        to_city,
+        to_state,
+        to_country,
+        to_country_code,
+        to_postal_code
+    ))
 
-        to_address_id = cursor.lastrowid
+    to_address_id = cursor.lastrowid
 
-        cursor.execute("""
-            INSERT INTO shipments(
-                requestid,
-                sender_customer_id,
-                receiver_customer_id,
-                from_address_id,
-                to_address_id,
-                service,
-                validation_status,
-                validation_reason,
-                state,
-                return_code
-            )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (
+    cursor.execute("""
+        INSERT INTO shipments(
             requestid,
+            application_id,
             sender_customer_id,
             receiver_customer_id,
             from_address_id,
             to_address_id,
             service,
-            "valid",
-            "No issues",
-            "initiated",
-            200
-        ))
+            validation_status,
+            validation_reason,
+            state,
+            return_code
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s)
+    """, (
+        requestid,
+        application_id,
+        sender_customer_id,
+        receiver_customer_id,
+        from_address_id,
+        to_address_id,
+        service,
+        "valid",
+        "No issues",
+        "initiated",
+        200
+    ))
 
-        shipment_id = cursor.lastrowid
+    shipment_id = cursor.lastrowid
 
-        cursor.execute("""
-            INSERT INTO shipment_tracking(
-                shipment_id,
-                current_status
-            )
-            VALUES (%s, %s)
-        """, (
+    cursor.execute("""
+        INSERT INTO shipment_tracking(
             shipment_id,
-            "initiated"
-        ))
+            current_status
+        )
+        VALUES (%s, %s)
+    """, (
+        shipment_id,
+        "initiated"
+    ))
 
-        connection.commit()
+    connection.commit()
 
-    except Exception as e:
-        connection.rollback()
-        return f"Shipment creation failed: {str(e)}"
-
-    finally:
-        cursor.close()
-        connection.close()
+    cursor.close()
+    connection.close()
 
     return admin_ui_shipments()
-
 @app.route("/admin-ui/applications")
 def admin_ui_applications():
 
@@ -1152,6 +1267,7 @@ def admin_ui_applications():
         "applications.html",
         applications=applications
     )
+
 
 @app.route("/admin-ui/view-label/<int:shipment_id>")
 def view_label(shipment_id):
@@ -1561,6 +1677,5 @@ def delete_shipment(shipment_id):
 if __name__ == "__main__":
     app.run(
         debug=True,
-        port=5001,
-        host="0.0.0.0"
+        port=5001
     )
