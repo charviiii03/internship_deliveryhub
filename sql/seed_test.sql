@@ -1,11 +1,33 @@
-INSERT INTO customers (full_name, phone_number)
+-- =============================================================
+-- DeliveryHub Seed Data (Test)
+-- Fixed: address_line → address_line1, added email to customers,
+--        added DeliveryHub default application entry
+-- =============================================================
+
+-- Default DeliveryHub application (always present as the system default)
+INSERT IGNORE INTO applications
+    (application_id, application_token, application_name, user_email, expiry_date)
 VALUES
-('john', '9999999999'),
-('rahul', '8888888888');
+    ('deliveryhub-default', 'SYSTEM_DEFAULT_TOKEN_NOT_FOR_AUTH', 'DeliveryHub', 'admin@deliveryhub.com', '2099-12-31');
+
+-- Test application
+INSERT IGNORE INTO applications
+    (application_id, application_token, application_name, user_email, expiry_date)
+VALUES
+    ('app123', 'token123', 'test_client', 'testclient@example.com', '2026-12-31');
 
 
-INSERT INTO addresses (
-    address_line,
+-- Customers (email column is required - NOT NULL UNIQUE in schema)
+INSERT IGNORE INTO customers (full_name, phone_number, email)
+VALUES
+    ('John Smith',  '+1 2097390823', 'johnsmith@example.com'),
+    ('Rahul Kumar', '+91 8888888888', 'rahul@example.com');
+
+
+-- Addresses (use address_line1, not address_line)
+INSERT IGNORE INTO addresses (
+    address_line1,
+    address_line2,
     city,
     state_name,
     country,
@@ -13,11 +35,14 @@ INSERT INTO addresses (
     postal_code
 )
 VALUES
-('new york, usa', 'New York', 'NY', 'United States of America', 'US', '10001'),
-('delhi, india', 'Delhi', 'Delhi', 'India', 'IN', '110001');
+    ('164 Seneca Pl', NULL, 'New York', 'NY', 'USA', 'US', '10001'),
+    ('6-4-370, Krishna Nagar Colony', 'Bhoiguda', 'Secunderabad', 'Telangana', 'India', 'IN', '500080');
 
+
+-- Sample shipments
 INSERT IGNORE INTO shipments (
     requestid,
+    application_id,
     sender_customer_id,
     receiver_customer_id,
     from_address_id,
@@ -32,194 +57,42 @@ INSERT IGNORE INTO shipments (
 VALUES
 (
     'sample-001',
-    1,
-    2,
-    1,
-    2,
-    'express',
-    'valid',
-    NULL,
-    'initiated',
-    200,
-    '{"status":"valid"}'
-);
-
-INSERT IGNORE INTO shipments ( -- this ignore skips it, if duplicate exists
-    requestid,
-    sender_customer_id,
-    receiver_customer_id,
-    from_address_id,
-    to_address_id,
-    service,
-    validation_status,
-    validation_reason,
-    state,
-    return_code,
-    return_json
-)
-VALUES
+    'deliveryhub-default',
+    1, 2, 1, 2,
+    'Express International',
+    'valid', NULL, 'initiated', 200,
+    '{"status":"valid","message":"Shipment request accepted successfully"}'
+),
 (
     'sample-invalid-001',
-    1,
-    2,
-    1,
-    2,
-    'express',
-    'invalid',
-    'invalid from country code',
-    'initiated',
-    400,
-    '{"status":"invalid","reason":"invalid from country code"}'
-);
-
-INSERT INTO shipment_tracking (
-    shipment_id,
-    current_status
-)
-VALUES
-(1, 'initiated'),
-(2, 'validation_failed');
-
-INSERT INTO applications
-(application_id, application_token, application_name, expiry_date)
-VALUES
-('app123', 'token123', 'test_client', '2026-12-31');
-
-INSERT IGNORE INTO shipments (
-    requestid,
-    sender_customer_id,
-    receiver_customer_id,
-    from_address_id,
-    to_address_id,
-    service,
-    validation_status,
-    validation_reason,
-    state,
-    return_code,
-    return_json
-)
-VALUES
+    'deliveryhub-default',
+    1, 2, 1, 2,
+    'Express International',
+    'invalid', 'Invalid sender country code', 'initiated', 400,
+    '{"status":"invalid","reason":"Invalid sender country code"}'
+),
 (
     'sample-valid-002',
-    1,
-    2,
-    1,
-    2,
-    'priority',
-    'valid',
-    NULL,
-    'assigned',
-    200,
+    'app123',
+    1, 2, 1, 2,
+    'Standard',
+    'valid', NULL, 'assigned', 200,
     '{"status":"valid","message":"Shipment request accepted successfully"}'
-);
-
-INSERT IGNORE INTO shipments (
-    requestid,
-    sender_customer_id,
-    receiver_customer_id,
-    from_address_id,
-    to_address_id,
-    service,
-    validation_status,
-    validation_reason,
-    state,
-    return_code,
-    return_json
-)
-VALUES
+),
 (
     'sample-invalid-phone',
-    1,
-    2,
-    1,
-    2,
-    'express',
-    'invalid',
-    'sender phone number missing',
-    'validation_failed',
-    400,
+    'app123',
+    1, 2, 1, 2,
+    'Express International',
+    'invalid', 'Sender phone number missing', 'validation_failed', 400,
     '{"status":"invalid","reason":"Sender phone number is required"}'
 );
-INSERT IGNORE INTO shipments (
-    requestid,
-    sender_customer_id,
-    receiver_customer_id,
-    from_address_id,
-    to_address_id,
-    service,
-    validation_status,
-    validation_reason,
-    state,
-    return_code,
-    return_json
-)
-VALUES
-(
-    'sample-invalid-email',
-    1,
-    2,
-    1,
-    2,
-    'express',
-    'invalid',
-    'invalid email address',
-    'validation_failed',
-    400,
-    '{"status":"invalid","reason":"Please provide a valid email address"}'
-);
 
-INSERT IGNORE INTO shipments (
-    requestid,
-    sender_customer_id,
-    receiver_customer_id,
-    from_address_id,
-    to_address_id,
-    service,
-    validation_status,
-    validation_reason,
-    state,
-    return_code,
-    return_json
-)
-VALUES
-(
-    'sample-return-001',
-    2,
-    1,
-    2,
-    1,
-    'express',
-    'review',
-    'return shipment detected',
-    'pending_review',
-    202,
-    '{"status":"review","message":"Return shipment detected and pending confirmation"}'
-);
 
-INSERT IGNORE INTO shipments (
-    requestid,
-    sender_customer_id,
-    receiver_customer_id,
-    from_address_id,
-    to_address_id,
-    service,
-    validation_status,
-    validation_reason,
-    state,
-    return_code,
-    return_json
-)
+-- Tracking entries
+INSERT IGNORE INTO shipment_tracking (shipment_id, current_status)
 VALUES
-(
-    'sample-image-001',
-    1,
-    2,
-    1,
-    2,
-    'express',
-    'review',
-    'shipment image uploaded',
-    'pending_review',
-    202,
-    '{"status":"review","message":"Shipment image received and pending review"}'
-);
+    (1, 'initiated'),
+    (2, 'validation_failed'),
+    (3, 'assigned'),
+    (4, 'validation_failed');

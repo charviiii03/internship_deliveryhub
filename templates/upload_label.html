@@ -1,126 +1,158 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Upload Label - DeliveryHub</title>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Label — DeliveryHub</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            background: #f7f9fc;
-            font-family: Arial, sans-serif;
-        }
+        :root{--sidebar-bg:#0f172a;--sidebar-w:240px;--accent:#3b82f6;--accent-dark:#1d4ed8;--page-bg:#f1f5f9;--card-bg:#ffffff;--text-primary:#0f172a;--text-muted:#64748b;--border:#e2e8f0;--radius:14px;}
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Inter',sans-serif;background:var(--page-bg);color:var(--text-primary);display:flex;min-height:100vh;}
+        .sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);min-height:100vh;display:flex;flex-direction:column;padding:24px 16px;position:fixed;top:0;left:0;z-index:100;}
+        .sidebar-brand{display:flex;align-items:center;gap:10px;padding:0 8px 28px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:20px;}
+        .brand-icon{width:38px;height:38px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:white;flex-shrink:0;}
+        .brand-name{font-size:15px;font-weight:700;color:white;line-height:1.2;}
+        .brand-sub{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:1px;text-transform:uppercase;}
+        .nav-label{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:1.2px;text-transform:uppercase;padding:0 12px;margin-bottom:8px;}
+        .nav-link-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:rgba(255,255,255,.6);text-decoration:none;font-size:14px;font-weight:500;margin-bottom:2px;transition:all .18s;}
+        .nav-link-item i{width:18px;text-align:center;font-size:13px;}
+        .nav-link-item:hover{background:rgba(255,255,255,.07);color:white;}
+        .nav-link-item.active{background:var(--accent);color:white;}
+        .main{margin-left:var(--sidebar-w);flex:1;padding:32px;min-width:0;}
+        .page-title{font-size:26px;font-weight:800;margin-bottom:4px;}
+        .page-subtitle{font-size:14px;color:var(--text-muted);margin-bottom:28px;}
 
-        .upload-card {
-            border: none;
-            border-radius: 22px;
-            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
-            overflow: hidden;
-        }
+        .upload-card{background:var(--card-bg);border:1px solid var(--border);border-radius:20px;overflow:hidden;max-width:540px;box-shadow:0 8px 30px rgba(15,23,42,.08);}
+        .upload-header{background:linear-gradient(135deg,#0369a1,#0ea5e9);color:white;padding:28px 30px;text-align:center;}
+        .upload-header i{font-size:44px;margin-bottom:12px;display:block;opacity:.9;}
+        .upload-header h3{font-size:18px;font-weight:700;margin-bottom:4px;}
+        .upload-header p{font-size:13px;opacity:.8;margin:0;}
+        .upload-body{padding:30px;}
 
-        .upload-header {
-            background: linear-gradient(135deg, #2563eb, #06b6d4);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
+        /* Read-only shipment ID display */
+        .id-display{display:flex;align-items:center;gap:10px;background:#f1f5f9;border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:20px;}
+        .id-display i{color:var(--text-muted);font-size:14px;}
+        .id-display .id-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);display:block;}
+        .id-display .id-value{font-size:16px;font-weight:800;color:var(--text-primary);}
 
-        .upload-body {
-            padding: 35px;
-            background: white;
-        }
+        /* Manual entry (when no ID passed) */
+        .field-group{margin-bottom:20px;}
+        .field-label{font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:7px;display:block;}
+        .field-hint{font-size:12px;color:var(--text-muted);margin-top:5px;}
+        .field-input{width:100%;height:44px;border:1px solid var(--border);border-radius:10px;padding:0 14px;font-size:14px;font-family:'Inter',sans-serif;transition:border .18s,box-shadow .18s;}
+        .field-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.1);}
 
-        .pdf-box {
-            border: 2px dashed #cbd5e1;
-            border-radius: 18px;
-            padding: 30px;
-            background: #f8fafc;
-            text-align: center;
-        }
+        .drop-zone{border:2px dashed #cbd5e1;border-radius:14px;padding:32px 20px;background:#f8fafc;text-align:center;cursor:pointer;transition:all .2s;}
+        .drop-zone:hover,.drop-zone.dragover{border-color:var(--accent);background:#eff6ff;}
+        .drop-zone i{font-size:36px;color:var(--accent);margin-bottom:10px;display:block;}
+        .drop-zone .dz-title{font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:4px;}
+        .drop-zone .dz-sub{font-size:12px;color:var(--text-muted);}
+        .drop-zone input[type=file]{display:none;}
+        .file-chosen{font-size:13px;color:var(--accent);font-weight:600;margin-top:8px;display:none;}
 
-        .form-control {
-            border-radius: 10px;
-            height: 45px;
-        }
-
-        .btn-upload {
-            height: 48px;
-            border-radius: 10px;
-            font-weight: 600;
-        }
+        .submit-btn{width:100%;height:46px;background:var(--text-primary);color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .18s;font-family:'Inter',sans-serif;margin-top:20px;}
+        .submit-btn:hover{background:#1e293b;}
+        .back-link{display:block;text-align:center;margin-top:18px;font-size:13px;color:var(--text-muted);text-decoration:none;}
+        .back-link:hover{color:var(--accent);}
     </style>
 </head>
-
 <body>
 
-<div class="container mt-5">
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon"><i class="fa-solid fa-truck-fast"></i></div>
+        <div><div class="brand-name">DeliveryHub</div><div class="brand-sub">Admin Console</div></div>
+    </div>
+    <div class="nav-label">Menu</div>
+    <a href="/admin-ui" class="nav-link-item"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+    <a href="/admin-ui/applications" class="nav-link-item"><i class="fa-solid fa-building"></i> Applications</a>
+    <a href="/admin-ui/auth-logs" class="nav-link-item"><i class="fa-solid fa-shield-halved"></i> Auth Logs</a>
+    <a href="/admin-ui/shipments" class="nav-link-item active"><i class="fa-solid fa-boxes-stacked"></i> Shipments</a>
+    <a href="/admin-ui/upload-label" class="nav-link-item"><i class="fa-solid fa-file-arrow-up"></i> Upload Label</a>
+</nav>
 
-    <div class="card upload-card col-md-6 mx-auto">
+<main class="main">
+    <div class="page-title">Upload Shipment Label</div>
+    <div class="page-subtitle">Attach a PDF label — it will be emailed to the receiver automatically.</div>
 
+    <div class="upload-card">
         <div class="upload-header">
-            <i class="fa-solid fa-file-pdf fa-4x mb-3"></i>
-            <h2 class="fw-bold">Upload Shipment Label</h2>
-            <p class="mb-0">
-                Upload a PDF label and send it automatically to the receiver.
-            </p>
+            <i class="fa-solid fa-file-pdf"></i>
+            <h3>Select PDF Label</h3>
+            <p>Only PDF files are accepted. Receiver email is fetched from the shipment record.</p>
         </div>
 
         <div class="upload-body">
-
             <form method="POST" action="/admin-ui/upload-label" enctype="multipart/form-data">
 
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">Shipment ID</label>
-                    <input
-                        type="text"
-                        name="shipment_id"
-                        class="form-control"
-                        value="{{ shipment_id or '' }}"
-                        placeholder="Example: 1"
-                        required
-                    >
-                    <small class="text-muted">
-                        Receiver email will be fetched automatically from this shipment.
-                    </small>
+                {% if shipment_id %}
+                <!-- Shipment ID passed from shipments page — show as read-only -->
+                <div class="id-display">
+                    <i class="fa-solid fa-lock"></i>
+                    <div>
+                        <span class="id-label">Shipment ID (read-only)</span>
+                        <span class="id-value">#{{ shipment_id }}</span>
+                    </div>
+                </div>
+                <!-- Hidden field so it still submits -->
+                <input type="hidden" name="shipment_id" value="{{ shipment_id }}">
+
+                {% else %}
+                <!-- No ID passed — allow manual entry -->
+                <div class="field-group">
+                    <label class="field-label" for="shipment_id_input">Shipment ID</label>
+                    <input class="field-input" type="text" id="shipment_id_input"
+                           name="shipment_id" placeholder="e.g. 3" required>
+                    <div class="field-hint">Receiver email is fetched automatically from this shipment.</div>
+                </div>
+                {% endif %}
+
+                <!-- PDF Upload -->
+                <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <div class="dz-title">Click to select or drag & drop</div>
+                    <div class="dz-sub">PDF files only</div>
+                    <div class="file-chosen" id="fileChosen"></div>
+                    <input type="file" id="fileInput" name="label_file"
+                           accept="application/pdf" required
+                           onchange="showFileName(this)">
                 </div>
 
-                <div class="pdf-box mb-4">
-                    <i class="fa-solid fa-cloud-arrow-up fa-3x text-primary mb-3"></i>
-
-                    <h5 class="fw-bold">Select PDF Label</h5>
-                    <p class="text-muted small mb-3">
-                        Only PDF files are allowed.
-                    </p>
-
-                    <input
-                        type="file"
-                        name="label_file"
-                        class="form-control"
-                        accept="application/pdf"
-                        required
-                    >
-                </div>
-
-                <button type="submit" class="btn btn-dark btn-upload w-100">
-                    <i class="fa-solid fa-upload me-2"></i>
-                    Upload and Email Label
+                <button type="submit" class="submit-btn">
+                    <i class="fa-solid fa-upload"></i> Upload &amp; Send to Receiver
                 </button>
 
             </form>
 
-            <div class="text-center mt-4">
-                <a href="/admin-ui/shipments" class="text-decoration-none">
-                    <i class="fa-solid fa-arrow-left me-1"></i>
-                    Back to Shipments
-                </a>
-            </div>
-
+            <a href="/admin-ui/shipments" class="back-link">
+                <i class="fa-solid fa-arrow-left me-1"></i> Back to Shipments
+            </a>
         </div>
-
     </div>
+</main>
 
-</div>
+<script>
+function showFileName(input) {
+    const el = document.getElementById("fileChosen");
+    if (input.files.length > 0) {
+        el.textContent = "✓ " + input.files[0].name;
+        el.style.display = "block";
+    }
+}
+
+const dz = document.getElementById("dropZone");
+dz.addEventListener("dragover", e => { e.preventDefault(); dz.classList.add("dragover"); });
+dz.addEventListener("dragleave", () => dz.classList.remove("dragover"));
+dz.addEventListener("drop", e => {
+    e.preventDefault(); dz.classList.remove("dragover");
+    const fi = document.getElementById("fileInput");
+    fi.files = e.dataTransfer.files;
+    showFileName(fi);
+});
+</script>
 
 </body>
 </html>

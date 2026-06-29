@@ -1,33 +1,36 @@
+# db.py
+# Database connection helper.
+# Reads credentials from .env file.
+#
+# Required .env keys:
+#   DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+
 import os
 import mysql.connector
 from mysql.connector import Error
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-# Example:
-# DB_HOST=localhost
-# DB_USER=root
-# DB_PASSWORD=1234
-# DB_NAME=shipment_db
-
 load_dotenv()
 
+
 def get_db_connection():
-    #if database connects successfully
-    try: 
+    """
+    Returns a MySQL connection, or None if connection fails.
+    Always call cursor.close() and connection.close() after use.
+    """
+    try:
         connection = mysql.connector.connect(
             host=os.getenv("DB_HOST"),
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
-            database=os.getenv("DB_NAME")
+            database=os.getenv("DB_NAME"),
+            connection_timeout=10,
         )
 
         if connection.is_connected():
-            print("Database connected successfully")
+            return connection
 
-        return connection
-    #catching any mysql errors 
-    # if password is wrong / DB is off / connection fails
     except Error as e:
-        print("Error while connecting to MySQL:", e) #error message
-        return None
+        print(f"[DB] Connection failed: {e}")
+
+    return None

@@ -1,233 +1,107 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Create Application - DeliveryHub</title>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Application — DeliveryHub</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            background: #f7f9fc;
-            font-family: Arial, sans-serif;
-        }
+        :root{--sidebar-bg:#0f172a;--sidebar-w:240px;--accent:#3b82f6;--accent-dark:#1d4ed8;--page-bg:#f1f5f9;--card-bg:#ffffff;--text-primary:#0f172a;--text-muted:#64748b;--border:#e2e8f0;--radius:14px;}
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Inter',sans-serif;background:var(--page-bg);color:var(--text-primary);display:flex;min-height:100vh;}
+        .sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);min-height:100vh;display:flex;flex-direction:column;padding:24px 16px;position:fixed;top:0;left:0;z-index:100;}
+        .sidebar-brand{display:flex;align-items:center;gap:10px;padding:0 8px 28px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:20px;}
+        .brand-icon{width:38px;height:38px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:white;flex-shrink:0;}
+        .brand-name{font-size:15px;font-weight:700;color:white;line-height:1.2;}
+        .brand-sub{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:1px;text-transform:uppercase;}
+        .nav-label{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:1.2px;text-transform:uppercase;padding:0 12px;margin-bottom:8px;}
+        .nav-link-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:rgba(255,255,255,.6);text-decoration:none;font-size:14px;font-weight:500;margin-bottom:2px;transition:all .18s;}
+        .nav-link-item i{width:18px;text-align:center;font-size:13px;}
+        .nav-link-item:hover{background:rgba(255,255,255,.07);color:white;}
+        .nav-link-item.active{background:var(--accent);color:white;}
+        .main{margin-left:var(--sidebar-w);flex:1;padding:32px;min-width:0;display:flex;flex-direction:column;}
 
-        .sidebar {
-            width: 260px;
-            min-height: 100vh;
-            background: linear-gradient(180deg, #06244d, #02152e);
-            padding: 24px;
-            color: white;
-        }
+        .page-title{font-size:26px;font-weight:800;margin-bottom:4px;}
+        .page-subtitle{font-size:14px;color:var(--text-muted);margin-bottom:32px;}
 
-        .sidebar-logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 35px;
-        }
+        .form-card{background:var(--card-bg);border:1px solid var(--border);border-radius:20px;overflow:hidden;max-width:560px;width:100%;box-shadow:0 8px 30px rgba(15,23,42,.08);}
+        .form-header{background:linear-gradient(135deg,#1d4ed8,#0ea5e9);color:white;padding:28px 30px;}
+        .form-header-icon{width:52px;height:52px;background:rgba(255,255,255,.15);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px;}
+        .form-header h3{font-size:18px;font-weight:700;margin-bottom:4px;}
+        .form-header p{font-size:13px;opacity:.8;margin:0;}
+        .form-body{padding:30px;}
 
-        .sidebar-logo img {
-            width: 46px;
-            height: 46px;
-            border-radius: 14px;
-            object-fit: cover;
-            background: white;
-        }
+        .field-group{margin-bottom:20px;}
+        .field-label{font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:7px;display:block;}
+        .field-input{width:100%;height:44px;border:1px solid var(--border);border-radius:10px;padding:0 14px;font-size:14px;font-family:'Inter',sans-serif;color:var(--text-primary);transition:border .18s,box-shadow .18s;background:white;}
+        .field-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.1);}
+        .field-input::placeholder{color:#94a3b8;}
 
-        .sidebar a {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: white;
-            text-decoration: none;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            font-weight: 500;
-        }
+        .submit-btn{width:100%;height:46px;background:var(--text-primary);color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .18s;font-family:'Inter',sans-serif;}
+        .submit-btn:hover{background:#1e293b;}
 
-        .sidebar a:hover,
-        .sidebar .active {
-            background: #2563eb;
-        }
-
-        .main-content {
-            flex: 1;
-            padding: 32px;
-        }
-
-        .form-wrapper {
-            min-height: 75vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .form-card {
-            width: 100%;
-            max-width: 620px;
-            border: none;
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: 0 14px 35px rgba(15, 23, 42, 0.12);
-        }
-
-        .form-header {
-            background: linear-gradient(135deg, #2563eb, #06b6d4);
-            color: white;
-            padding: 28px;
-        }
-
-        .icon-box {
-            width: 58px;
-            height: 58px;
-            border-radius: 18px;
-            background: rgba(255,255,255,0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            margin-bottom: 14px;
-        }
-
-        .form-body {
-            padding: 32px;
-            background: white;
-        }
-
-        .form-control {
-            height: 46px;
-            border-radius: 12px;
-        }
-
-        .btn-create {
-            height: 48px;
-            border-radius: 12px;
-            font-weight: 600;
-            background: #111827;
-            color: white;
-        }
-
-        .btn-create:hover {
-            background: #2563eb;
-            color: white;
-        }
+        .info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 14px;display:flex;gap:10px;margin-bottom:22px;}
+        .info-box i{color:var(--accent);margin-top:1px;flex-shrink:0;}
+        .info-box p{font-size:12px;color:#1e40af;margin:0;line-height:1.5;}
     </style>
 </head>
-
 <body>
 
-<div class="d-flex">
-
-    <div class="sidebar">
-
-        <div class="sidebar-logo">
-            <img src="{{ url_for('static', filename='logo.jpeg') }}">
-            <div>
-                <h4 class="mb-0">DeliveryHub</h4>
-                <small>ADMIN CONSOLE</small>
-            </div>
-        </div>
-
-        <a href="/admin-ui">
-            <i class="fa-solid fa-table-cells-large"></i> Dashboard
-        </a>
-
-        <a href="/admin-ui/create-application" class="active">
-            <i class="fa-solid fa-plus"></i> New Application
-        </a>
-
-        <a href="/admin-ui/applications">
-            <i class="fa-solid fa-building"></i> Applications
-        </a>
-
-        <a href="/admin-ui/auth-logs">
-            <i class="fa-solid fa-shield-halved"></i> Auth Logs
-        </a>
-
-        <a href="/admin-ui/shipments">
-            <i class="fa-solid fa-truck"></i> Shipments
-        </a>
-
-        <a href="/admin-ui/upload-label">
-            <i class="fa-solid fa-file-arrow-up"></i> Upload Label
-        </a>
-
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon"><i class="fa-solid fa-truck-fast"></i></div>
+        <div><div class="brand-name">DeliveryHub</div><div class="brand-sub">Admin Console</div></div>
     </div>
+    <div class="nav-label">Menu</div>
+    <a href="/admin-ui" class="nav-link-item"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+    <a href="/admin-ui/applications" class="nav-link-item"><i class="fa-solid fa-building"></i> Applications</a>
+    <a href="/admin-ui/auth-logs" class="nav-link-item"><i class="fa-solid fa-shield-halved"></i> Auth Logs</a>
+    <a href="/admin-ui/shipments" class="nav-link-item"><i class="fa-solid fa-boxes-stacked"></i> Shipments</a>
+    <a href="/admin-ui/upload-label" class="nav-link-item"><i class="fa-solid fa-file-arrow-up"></i> Upload Label</a>
+</nav>
 
-    <div class="main-content">
+<main class="main">
+    <div class="page-title">New Application</div>
+    <div class="page-subtitle">Onboard a client and send credentials by email automatically.</div>
 
-        <div>
-            <h1 class="fw-bold mb-1">Create New Application</h1>
-            <p class="text-muted">Onboard a new client and send application credentials by email.</p>
+    <div class="form-card">
+        <div class="form-header">
+            <div class="form-header-icon"><i class="fa-solid fa-building-circle-check"></i></div>
+            <h3>Application Onboarding</h3>
+            <p>A unique ID and secure token will be generated and emailed to the client.</p>
         </div>
 
-        <div class="form-wrapper">
+        <div class="form-body">
 
-            <div class="card form-card">
-
-                <div class="form-header">
-
-                    <div class="icon-box">
-                        <i class="fa-solid fa-building-circle-check"></i>
-                    </div>
-
-                    <h3 class="fw-bold mb-1">Application Onboarding</h3>
-                    <p class="mb-0">
-                        Admin creates application access for backend integration.
-                    </p>
-
-                </div>
-
-                <div class="form-body">
-
-                    <form method="POST" action="/admin-ui/create-application">
-
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">
-                                Application Name
-                            </label>
-
-                            <input
-                                type="text"
-                                name="application_name"
-                                class="form-control"
-                                placeholder="Example: Sateesh Logistics"
-                                required
-                            >
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">
-                                User Email
-                            </label>
-
-                            <input
-                                type="email"
-                                name="user_email"
-                                class="form-control"
-                                placeholder="sateesh@example.com"
-                                required
-                            >
-                        </div>
-
-                        <button type="submit" class="btn btn-create w-100">
-                            <i class="fa-solid fa-plus me-2"></i>
-                            Create Application
-                        </button>
-
-                    </form>
-
-                </div>
-
+            <div class="info-box">
+                <i class="fa-solid fa-circle-info"></i>
+                <p>The token is shown <strong>once</strong> after creation and hashed before storage. Make sure the email address is correct.</p>
             </div>
 
+            <form method="POST" action="/admin-ui/create-application">
+
+                <div class="field-group">
+                    <label class="field-label" for="app_name">Application Name</label>
+                    <input class="field-input" type="text" id="app_name" name="application_name"
+                           placeholder="e.g. Sateesh Logistics" required>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label" for="user_email">Client Email</label>
+                    <input class="field-input" type="email" id="user_email" name="user_email"
+                           placeholder="client@example.com" required>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <i class="fa-solid fa-plus"></i> Create Application
+                </button>
+
+            </form>
         </div>
-
     </div>
-
-</div>
+</main>
 
 </body>
 </html>

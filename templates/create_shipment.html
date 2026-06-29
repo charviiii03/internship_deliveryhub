@@ -2,417 +2,212 @@
 <html>
 <head>
     <title>Create Shipment - DeliveryHub</title>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-
     <style>
-        body {
-            background: #f7f9fc;
-            font-family: Arial, sans-serif;
-        }
-
-        .card {
-            border: none;
-            border-radius: 18px;
-        }
-
-        .section-title {
-            font-weight: 700;
-            margin-top: 25px;
-            margin-bottom: 15px;
-        }
-
-        .form-control,
-        .form-select {
-            height: 45px;
-            border-radius: 10px;
-        }
-
-        .btn-dark {
-            height: 48px;
-            border-radius: 10px;
-            font-weight: 600;
-        }
+        body { background: #f7f9fc; font-family: Arial, sans-serif; }
+        .card { border: none; border-radius: 18px; }
+        .section-title { font-weight: 700; margin-top: 25px; margin-bottom: 15px; color: #1e293b; }
+        .form-control, .form-select { height: 45px; border-radius: 10px; }
+        .btn-dark { height: 48px; border-radius: 10px; font-weight: 600; }
+        .input-group .input-group-text { background: #e2e8f0; border-radius: 10px 0 0 10px; font-weight: 600; min-width: 56px; justify-content: center; }
+        .input-group .form-control { border-radius: 0 10px 10px 0; }
     </style>
 </head>
 
 <body>
 <div class="container mt-5 mb-5">
-
     <div class="card shadow p-4 col-md-9 mx-auto">
 
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
                 <h2 class="fw-bold mb-1">Create Shipment Request</h2>
-                <p class="text-muted mb-0">
-                    Admin can create India ↔ USA shipment requests.
-                </p>
+                <p class="text-muted mb-0">Admin can create India ↔ USA shipment requests.</p>
             </div>
-
-            <a href="/admin-ui/shipments" class="btn btn-outline-dark">
-                Back
-            </a>
+            <a href="/admin-ui/shipments" class="btn btn-outline-dark">Back</a>
         </div>
 
         <form method="POST" action="/admin-ui/create-shipment">
 
-            <!-- Application -->
+            <!-- ── APPLICATION ── -->
             <h5 class="section-title">
-                <i class="fa-solid fa-layer-group me-2"></i>
-                Application
+                <i class="fa-solid fa-layer-group me-2"></i>Application
             </h5>
 
             <div class="mb-4">
-               <select class="form-select" name="application_id" required>
+                <label class="form-label fw-semibold">Select Application</label>
+                <select class="form-select" name="application_id" required>
                     {% for app in applications %}
-                    <option
-                        value="{{ app.id }}"
+                    {# FIX Bug 6: use app.application_id not app.id #}
+                    <option value="{{ app.application_id }}"
                         {% if app.application_name == 'DeliveryHub' %}selected{% endif %}>
                         {{ app.application_name }}
                     </option>
                     {% endfor %}
                 </select>
+            </div>  {# FIX Bug: closing </div> was missing in the original #}
 
-
-            <!-- Sender Details -->
+            <!-- ── SENDER DETAILS ── -->
             <h5 class="section-title">
-                <i class="fa-solid fa-user me-2"></i>
-                Sender Details
+                <i class="fa-solid fa-user me-2"></i>Sender Details
             </h5>
 
             <div class="row">
 
                 <div class="col-md-6 mb-3">
-                    <input
-                        class="form-control"
-                        id="sender_name"
-                        name="sender_name"
-                        placeholder="Sender Name"
-                        list="customer_list"
-                        required>
+                    <input class="form-control" id="sender_name" name="sender_name"
+                           placeholder="Sender Name" list="customer_list" required>
                 </div>
 
                 <div class="col-md-6 mb-3">
-                    <input
-                        class="form-control"
-                        type="email"
-                        name="sender_email"
-                        placeholder="Sender Email"
-                        required>
+                    <input class="form-control" type="email" name="sender_email"
+                           placeholder="Sender Email" required>
                 </div>
 
-                <div class="row mb-3">
+                <!-- Country + Phone + Postal on one row -->
+                <div class="col-md-4 mb-3">
+                    <label class="form-label text-muted small">Country</label>
+                    <select id="sender_country" name="from_country" class="form-select">
+                        <option value="USA" selected>USA</option>
+                        <option value="India">India</option>
+                    </select>
+                    <input type="hidden" id="sender_country_code" name="from_country_code" value="US">
+                </div>
 
-    <div class="row mb-3">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label text-muted small">Phone</label>
+                    <div class="input-group">
+                        <span class="input-group-text" id="sender_phone_prefix">+1</span>
+                        <input type="hidden" id="sender_phone_code" name="sender_phone_code" value="+1">
+                        <input type="text" class="form-control" name="sender_phone"
+                               placeholder="Phone Number" required>
+                    </div>
+                </div>
 
-    <!-- Country -->
-    <div class="col-md-4">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label text-muted small">Postal / ZIP Code</label>
+                    <input type="text" class="form-control" name="from_postal_code"
+                           placeholder="e.g. 10001" required>
+                </div>
 
-        <select
-            id="sender_country"
-            name="from_country"
-            class="form-select">
-
-            <option value="USA" selected>USA</option>
-            <option value="India">India</option>
-
-        </select>
-
-        <!-- Hidden field for backend -->
-        <input
-            type="hidden"
-            id="sender_country_code"
-            name="from_country_code"
-            value="US">
-
-    </div>
-
-    <!-- Phone -->
-    <div class="col-md-4">
-
-        <div class="input-group">
-
-            <span
-                class="input-group-text"
-                id="sender_phone_code">
-                +1
-            </span>
-
-            <input
-                type="hidden"
-                id="sender_phone_code_value"
-                name="sender_phone_code"
-                value="+1">
-
-            <input
-                type="text"
-                class="form-control"
-                name="sender_phone"
-                placeholder="Phone Number"
-                required>
-
-        </div>
-
-    </div>
-
-    <!-- Postal Code -->
-    <div class="col-md-4">
-
-        <input
-            type="text"
-            class="form-control"
-            name="from_postal_code"
-            placeholder="Postal Code"
-            required>
-
-    </div>
-
-</div>
                 <div class="col-md-12 mb-3">
-                    <input
-                        class="form-control"
-                        name="from_address"
-                        placeholder="From Address"
-                        required>
+                    <input class="form-control" name="from_address" placeholder="Address Line" required>
                 </div>
 
                 <div class="col-md-6 mb-3">
-                    <input
-                        class="form-control"
-                        name="from_city"
-                        placeholder="From City"
-                        required>
+                    <input class="form-control" name="from_city" placeholder="City" required>
                 </div>
 
                 <div class="col-md-6 mb-3">
-                    <input
-                        class="form-control"
-                        name="from_state"
-                        placeholder="From State"
-                        required>
+                    <input class="form-control" name="from_state" placeholder="State" required>
                 </div>
 
             </div>
 
-
-            <!-- Receiver Details -->
+            <!-- ── RECEIVER DETAILS ── -->
             <h5 class="section-title">
-                <i class="fa-solid fa-location-dot me-2"></i>
-                Receiver Details
+                <i class="fa-solid fa-location-dot me-2"></i>Receiver Details
             </h5>
 
             <div class="row">
 
                 <div class="col-md-6 mb-3">
-                    <input
-                        class="form-control"
-                        name="receiver_name"
-                        placeholder="Receiver Name"
-                        required>
+                    <input class="form-control" name="receiver_name"
+                           placeholder="Receiver Name" required>
                 </div>
 
                 <div class="col-md-6 mb-3">
-                    <input
-                        class="form-control"
-                        type="email"
-                        name="receiver_email"
-                        placeholder="Receiver Email"
-                        required>
+                    <input class="form-control" type="email" name="receiver_email"
+                           placeholder="Receiver Email" required>
                 </div>
 
-               <div class="row mb-3">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label text-muted small">Country</label>
+                    <select id="receiver_country" name="to_country" class="form-select">
+                        <option value="India" selected>India</option>
+                        <option value="USA">USA</option>
+                    </select>
+                    <input type="hidden" id="receiver_country_code" name="to_country_code" value="IN">
+                </div>
 
-    <!-- Country -->
-    <div class="col-md-4">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label text-muted small">Phone</label>
+                    <div class="input-group">
+                        <span class="input-group-text" id="receiver_phone_prefix">+91</span>
+                        <input type="hidden" id="receiver_phone_code" name="receiver_phone_code" value="+91">
+                        <input type="text" class="form-control" name="receiver_phone"
+                               placeholder="Phone Number" required>
+                    </div>
+                </div>
 
-        <select
-            id="receiver_country"
-            name="to_country"
-            class="form-select">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label text-muted small">Postal / PIN Code</label>
+                    <input type="text" class="form-control" name="to_postal_code"
+                           placeholder="e.g. 500080" required>
+                </div>
 
-            <option value="India" selected>India</option>
-            <option value="USA">USA</option>
-
-        </select>
-
-        <!-- Hidden field for backend -->
-        <input
-            type="hidden"
-            id="receiver_country_code"
-            name="to_country_code"
-            value="IN">
-
-    </div>
-
-    <!-- Phone -->
-    <div class="col-md-4">
-
-        <div class="input-group">
-
-            <span
-                class="input-group-text"
-                id="receiver_phone_code">
-                +91
-            </span>
-
-            <input
-                type="hidden"
-                id="receiver_phone_code_value"
-                name="receiver_phone_code"
-                value="+91">
-
-            <input
-                type="text"
-                class="form-control"
-                name="receiver_phone"
-                placeholder="Phone Number"
-                required>
-
-        </div>
-
-    </div>
-
-    <!-- Postal Code -->
-    <div class="col-md-4">
-
-        <input
-            type="text"
-            class="form-control"
-            name="to_postal_code"
-            placeholder="Postal Code"
-            required>
-
-    </div>
-
-</div>
                 <div class="col-md-12 mb-3">
-                    <input
-                        class="form-control"
-                        name="to_address"
-                        placeholder="To Address"
-                        required>
+                    <input class="form-control" name="to_address" placeholder="Address Line" required>
                 </div>
 
                 <div class="col-md-6 mb-3">
-                    <input
-                        class="form-control"
-                        name="to_city"
-                        placeholder="To City"
-                        required>
+                    <input class="form-control" name="to_city" placeholder="City" required>
                 </div>
 
                 <div class="col-md-6 mb-3">
-                    <input
-                        class="form-control"
-                        name="to_state"
-                        placeholder="To State"
-                        required>
+                    <input class="form-control" name="to_state" placeholder="State" required>
                 </div>
 
             </div>
 
-
-            <!-- Shipment Details -->
+            <!-- ── SHIPMENT DETAILS ── -->
             <h5 class="section-title">
-                <i class="fa-solid fa-truck me-2"></i>
-                Shipment Details
+                <i class="fa-solid fa-truck me-2"></i>Shipment Details
             </h5>
 
             <div class="mb-4">
-
-                <label class="form-label fw-bold">
-                    Shipment Type
-                </label>
-
-                <select
-                    class="form-select"
-                    name="service"
-                    required>
-
-                    <option value="US_TO_INDIA_DOCUMENT_EXPRESS" selected>
-                        USA → India Documents (Express)
-                    </option>
-
-                    <option value="US_TO_INDIA_DOCUMENT_ECONOMY">
-                        USA → India Documents (Economy)
-                    </option>
-
-                    <option value="US_TO_INDIA_PARCEL_EXPRESS">
-                        USA → India Parcel (Express)
-                    </option>
-
-                    <option value="US_TO_INDIA_PARCEL_PRIORITY">
-                        USA → India Parcel (Priority)
-                    </option>
-
-                    <option value="INDIA_TO_US_DOCUMENT_EXPRESS">
-                        India → USA Documents (Express)
-                    </option>
-
-                    <option value="INDIA_TO_US_PARCEL_PRIORITY">
-                        India → USA Parcel (Priority)
-                    </option>
-
+                <label class="form-label fw-semibold">Shipment Type</label>
+                <select class="form-select" name="service" required>
+                    <option value="US_TO_INDIA_DOCUMENT_EXPRESS" selected>USA → India — Documents (Express)</option>
+                    <option value="US_TO_INDIA_DOCUMENT_ECONOMY">USA → India — Documents (Economy)</option>
+                    <option value="US_TO_INDIA_PARCEL_EXPRESS">USA → India — Parcel (Express)</option>
+                    <option value="US_TO_INDIA_PARCEL_PRIORITY">USA → India — Parcel (Priority)</option>
+                    <option value="INDIA_TO_US_DOCUMENT_EXPRESS">India → USA — Documents (Express)</option>
+                    <option value="INDIA_TO_US_PARCEL_PRIORITY">India → USA — Parcel (Priority)</option>
                 </select>
-
             </div>
-                
-
 
             <button class="btn btn-dark w-100" type="submit">
-                <i class="fa-solid fa-plus me-2"></i>
-                Create Shipment
+                <i class="fa-solid fa-plus me-2"></i>Create Shipment
             </button>
 
         </form>
-
     </div>
-
 </div>
 
-
-<!-- Customer List -->
+<!-- Customer name autocomplete -->
 <datalist id="customer_list">
     {% for customer in customers %}
     <option value="{{ customer.full_name }}">
     {% endfor %}
 </datalist>
 
-
 <script>
-
-    // Sender country autofill
+    // Sender country change → update hidden code + phone prefix display
     document.getElementById("sender_country").addEventListener("change", function () {
-
-        if (this.value === "USA") {
-            document.getElementById("sender_country_code").value = "US";
-            document.getElementById("sender_phone_code").value = "+1";
-        }
-
-        if (this.value === "India") {
-            document.getElementById("sender_country_code").value = "IN";
-            document.getElementById("sender_phone_code").value = "+91";
-        }
-
+        const isUSA = this.value === "USA";
+        document.getElementById("sender_country_code").value   = isUSA ? "US"  : "IN";
+        document.getElementById("sender_phone_code").value     = isUSA ? "+1"  : "+91";
+        document.getElementById("sender_phone_prefix").textContent = isUSA ? "+1" : "+91";
     });
 
-
-    // Receiver country autofill
+    // Receiver country change
     document.getElementById("receiver_country").addEventListener("change", function () {
-
-        if (this.value === "USA") {
-            document.getElementById("receiver_country_code").value = "US";
-            document.getElementById("receiver_phone_code").value = "+1";
-        }
-
-        if (this.value === "India") {
-            document.getElementById("receiver_country_code").value = "IN";
-            document.getElementById("receiver_phone_code").value = "+91";
-        }
-
+        const isUSA = this.value === "USA";
+        document.getElementById("receiver_country_code").value   = isUSA ? "US"  : "IN";
+        document.getElementById("receiver_phone_code").value     = isUSA ? "+1"  : "+91";
+        document.getElementById("receiver_phone_prefix").textContent = isUSA ? "+1" : "+91";
     });
-
 </script>
 
 </body>

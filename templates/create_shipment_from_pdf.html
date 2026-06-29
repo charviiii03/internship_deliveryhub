@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload PDF Label — DeliveryHub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root{--sidebar-bg:#0f172a;--sidebar-w:240px;--accent:#3b82f6;--accent-dark:#1d4ed8;--success:#10b981;--page-bg:#f1f5f9;--card-bg:#ffffff;--text-primary:#0f172a;--text-muted:#64748b;--border:#e2e8f0;--radius:14px;}
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Inter',sans-serif;background:var(--page-bg);color:var(--text-primary);display:flex;min-height:100vh;}
+        .sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);min-height:100vh;display:flex;flex-direction:column;padding:24px 16px;position:fixed;top:0;left:0;z-index:100;}
+        .sidebar-brand{display:flex;align-items:center;gap:10px;padding:0 8px 28px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:20px;}
+        .brand-icon{width:38px;height:38px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:white;flex-shrink:0;}
+        .brand-name{font-size:15px;font-weight:700;color:white;line-height:1.2;}
+        .brand-sub{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:1px;text-transform:uppercase;}
+        .nav-label{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:1.2px;text-transform:uppercase;padding:0 12px;margin-bottom:8px;}
+        .nav-link-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:rgba(255,255,255,.6);text-decoration:none;font-size:14px;font-weight:500;margin-bottom:2px;transition:all .18s;}
+        .nav-link-item i{width:18px;text-align:center;font-size:13px;}
+        .nav-link-item:hover{background:rgba(255,255,255,.07);color:white;}
+        .nav-link-item.active{background:var(--accent);color:white;}
+        .main{margin-left:var(--sidebar-w);flex:1;padding:32px;min-width:0;}
+        .page-title{font-size:26px;font-weight:800;margin-bottom:4px;}
+        .page-subtitle{font-size:14px;color:var(--text-muted);margin-bottom:28px;}
+
+        .card-panel{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:28px;max-width:780px;}
+
+        /* Upload zone */
+        .drop-zone{border:2px dashed #cbd5e1;border-radius:14px;padding:36px 20px;background:#f8fafc;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:20px;}
+        .drop-zone:hover,.drop-zone.dragover{border-color:var(--accent);background:#eff6ff;}
+        .drop-zone i{font-size:40px;color:var(--accent);margin-bottom:12px;display:block;}
+        .drop-zone .dz-title{font-size:15px;font-weight:700;margin-bottom:4px;}
+        .drop-zone .dz-sub{font-size:13px;color:var(--text-muted);}
+        .drop-zone input[type=file]{display:none;}
+        .file-chosen{font-size:13px;color:var(--success);font-weight:600;margin-top:10px;display:none;}
+
+        .extract-btn{width:100%;height:46px;background:var(--accent);color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .18s;font-family:'Inter',sans-serif;margin-bottom:20px;}
+        .extract-btn:hover{background:var(--accent-dark);}
+        .extract-btn:disabled{background:#94a3b8;cursor:not-allowed;}
+
+        /* Extracted fields preview */
+        #previewSection{display:none;}
+        .preview-header{display:flex;align-items:center;gap:10px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+        .preview-header i{color:var(--success);font-size:20px;}
+        .preview-header span{font-size:15px;font-weight:700;}
+        .preview-badge{background:#dcfce7;color:#15803d;font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;margin-left:auto;}
+
+        .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+        .field-group{display:flex;flex-direction:column;gap:5px;}
+        .field-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);}
+        .field-input{height:40px;border:1px solid var(--border);border-radius:9px;padding:0 12px;font-size:13px;font-family:'Inter',sans-serif;color:var(--text-primary);background:white;transition:border .15s;}
+        .field-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.1);}
+
+        .section-divider{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);padding:10px 0 12px;border-bottom:1px solid var(--border);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+
+        .submit-btn{width:100%;height:46px;background:#0f172a;color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .18s;font-family:'Inter',sans-serif;}
+        .submit-btn:hover{background:#1e293b;}
+
+        .spinner{display:none;width:20px;height:20px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;}
+        @keyframes spin{to{transform:rotate(360deg);}}
+
+        .back-link{display:block;text-align:center;margin-top:16px;font-size:13px;color:var(--text-muted);text-decoration:none;}
+        .back-link:hover{color:var(--accent);}
+
+        .meta-row{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+        .meta-chip{background:#f1f5f9;border-radius:8px;padding:6px 12px;font-size:12px;color:var(--text-muted);}
+        .meta-chip strong{color:var(--text-primary);}
+    </style>
+</head>
+<body>
+
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon"><i class="fa-solid fa-truck-fast"></i></div>
+        <div><div class="brand-name">DeliveryHub</div><div class="brand-sub">Admin Console</div></div>
+    </div>
+    <div class="nav-label">Menu</div>
+    <a href="/admin-ui" class="nav-link-item"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+    <a href="/admin-ui/applications" class="nav-link-item"><i class="fa-solid fa-building"></i> Applications</a>
+    <a href="/admin-ui/auth-logs" class="nav-link-item"><i class="fa-solid fa-shield-halved"></i> Auth Logs</a>
+    <a href="/admin-ui/shipments" class="nav-link-item active"><i class="fa-solid fa-boxes-stacked"></i> Shipments</a>
+    <a href="/admin-ui/upload-label" class="nav-link-item"><i class="fa-solid fa-file-arrow-up"></i> Upload Label</a>
+</nav>
+
+<main class="main">
+    <div class="page-title">Create Shipment from PDF Label</div>
+    <div class="page-subtitle">Upload a FedEx label PDF — all fields are extracted and pre-filled automatically.</div>
+
+    <div class="card-panel">
+
+        <!-- Step 1: Upload -->
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('pdfInput').click()">
+            <i class="fa-solid fa-file-pdf"></i>
+            <div class="dz-title">Click to select or drag & drop a PDF label</div>
+            <div class="dz-sub">FedEx international shipping labels supported</div>
+            <div class="file-chosen" id="fileChosen"></div>
+            <input type="file" id="pdfInput" accept="application/pdf" onchange="onFileSelected(this)">
+        </div>
+
+        <button class="extract-btn" id="extractBtn" onclick="extractPDF()" disabled>
+            <div class="spinner" id="spinner"></div>
+            <i class="fa-solid fa-wand-magic-sparkles" id="extractIcon"></i>
+            Extract Fields from PDF
+        </button>
+
+        <!-- Step 2: Extracted preview + editable form -->
+        <div id="previewSection">
+
+            <div class="preview-header">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Fields Extracted Successfully</span>
+                <span class="preview-badge">Review &amp; edit before saving</span>
+            </div>
+
+            <!-- Metadata chips -->
+            <div class="meta-row">
+                <div class="meta-chip">Tracking: <strong id="meta_tracking">—</strong></div>
+                <div class="meta-chip">Ship Date: <strong id="meta_date">—</strong></div>
+                <div class="meta-chip">Reference: <strong id="meta_ref">—</strong></div>
+            </div>
+
+            <form method="POST" action="/admin-ui/create-shipment" id="shipmentForm">
+
+                <!-- Application -->
+                <div class="section-divider"><i class="fa-solid fa-layer-group"></i> Application</div>
+                <div class="field-grid" style="grid-template-columns:1fr;">
+                    <div class="field-group">
+                        <label class="field-label">Application</label>
+                        <select class="field-input" name="application_id" required>
+                            {% for app in applications %}
+                            <option value="{{ app.application_id }}"
+                                {% if app.application_name == 'DeliveryHub' %}selected{% endif %}>
+                                {{ app.application_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Sender -->
+                <div class="section-divider"><i class="fa-solid fa-user"></i> Sender (USA)</div>
+                <div class="field-grid">
+                    <div class="field-group">
+                        <label class="field-label">Name</label>
+                        <input class="field-input" name="sender_name" id="f_from_name" required>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Email</label>
+                        <input class="field-input" type="email" name="sender_email" placeholder="sender@example.com" required>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Phone</label>
+                        <input class="field-input" name="sender_phone" id="f_from_phone" required>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">ZIP Code</label>
+                        <input class="field-input" name="from_postal_code" id="f_from_zip" required>
+                    </div>
+                    <div class="field-group" style="grid-column:span 2">
+                        <label class="field-label">Address</label>
+                        <input class="field-input" name="from_address" id="f_from_address1" required>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">City</label>
+                        <input class="field-input" name="from_city" id="f_from_city" required>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">State</label>
+                        <input class="field-input" name="from_state" id="f_from_state" required>
+                    </div>
+                </div>
+                <!-- Hidden sender fields -->
+                <input type="hidden" name="from_country" value="USA">
+                <input type="hidden" name="from_country_code" value="US">
+                <input type="hidden" name="sender_phone_code" value="+1">
+
+                <!-- Receiver -->
+                <div class="section-divider"><i class="fa-solid fa-location-dot"></i> Receiver (India)</div>
+                <div class="field-grid">
+                    <div class="field-group">
+                        <label class="field-label">Name</label>
+                        <input class="field-input" name="receiver_name" id="f_to_name" required>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Email</label>
+                        <input class="field-input" type="email" name="receiver_email" placeholder="receiver@example.com" required>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Phone</label>
+                        <input class="field-input" name="receiver_phone" id="f_to_phone" required>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">PIN Code</label>
+                        <input class="field-input" name="to_postal_code" id="f_to_postal" required>
+                    </div>
+                    <div class="field-group" style="grid-column:span 2">
+                        <label class="field-label">Address</label>
+                        <input class="field-input" name="to_address" id="f_to_address1" required>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">City</label>
+                        <input class="field-input" name="to_city" id="f_to_city" required>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">State</label>
+                        <input class="field-input" name="to_state" id="f_to_state" required>
+                    </div>
+                </div>
+                <!-- Hidden receiver fields -->
+                <input type="hidden" name="to_country" value="India">
+                <input type="hidden" name="to_country_code" value="IN">
+                <input type="hidden" name="receiver_phone_code" value="+91">
+
+                <!-- Service -->
+                <div class="section-divider"><i class="fa-solid fa-truck"></i> Shipment Service</div>
+                <div class="field-group" style="margin-bottom:20px;">
+                    <label class="field-label">Service Type</label>
+                    <select class="field-input" name="service" id="f_service" required>
+                        <option value="US_TO_INDIA_DOCUMENT_EXPRESS">USA → India — Documents (Express)</option>
+                        <option value="US_TO_INDIA_DOCUMENT_ECONOMY">USA → India — Documents (Economy)</option>
+                        <option value="US_TO_INDIA_PARCEL_EXPRESS">USA → India — Parcel (Express)</option>
+                        <option value="US_TO_INDIA_PARCEL_PRIORITY">USA → India — Parcel (Priority)</option>
+                        <option value="INDIA_TO_US_DOCUMENT_EXPRESS">India → USA — Documents (Express)</option>
+                        <option value="INDIA_TO_US_PARCEL_PRIORITY">India → USA — Parcel (Priority)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <i class="fa-solid fa-plus"></i> Create Shipment
+                </button>
+
+            </form>
+        </div>
+
+        <a href="/admin-ui/shipments" class="back-link">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to Shipments
+        </a>
+    </div>
+</main>
+
+<script>
+let selectedFile = null;
+
+function onFileSelected(input) {
+    if (input.files.length > 0) {
+        selectedFile = input.files[0];
+        document.getElementById("fileChosen").textContent = "✓ " + selectedFile.name;
+        document.getElementById("fileChosen").style.display = "block";
+        document.getElementById("extractBtn").disabled = false;
+    }
+}
+
+const dz = document.getElementById("dropZone");
+dz.addEventListener("dragover", e => { e.preventDefault(); dz.classList.add("dragover"); });
+dz.addEventListener("dragleave", () => dz.classList.remove("dragover"));
+dz.addEventListener("drop", e => {
+    e.preventDefault(); dz.classList.remove("dragover");
+    const fi = document.getElementById("pdfInput");
+    fi.files = e.dataTransfer.files;
+    onFileSelected(fi);
+});
+
+async function extractPDF() {
+    if (!selectedFile) return;
+
+    const btn  = document.getElementById("extractBtn");
+    const spin = document.getElementById("spinner");
+    const icon = document.getElementById("extractIcon");
+
+    btn.disabled = true;
+    spin.style.display = "block";
+    icon.style.display = "none";
+
+    const fd = new FormData();
+    fd.append("label_pdf", selectedFile);
+
+    try {
+        const res  = await fetch("/admin-ui/extract-label", { method: "POST", body: fd });
+        const data = await res.json();
+
+        if (data.status !== "success") {
+            alert("Extraction failed: " + (data.reason || "unknown error"));
+            return;
+        }
+
+        const f = data.fields;
+
+        // Fill meta chips
+        document.getElementById("meta_tracking").textContent = f.tracking_number || "—";
+        document.getElementById("meta_date").textContent     = f.ship_date       || "—";
+        document.getElementById("meta_ref").textContent      = f.reference        || "—";
+
+        // Fill form fields
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ""; };
+        set("f_from_name",    f.from_name);
+        set("f_from_phone",   f.from_phone);
+        set("f_from_address1",f.from_address1);
+        set("f_from_city",    f.from_city);
+        set("f_from_state",   f.from_state);
+        set("f_from_zip",     f.from_zip);
+        set("f_to_name",      f.to_name);
+        set("f_to_phone",     f.to_phone);
+        set("f_to_address1",  f.to_address1);
+        set("f_to_city",      f.to_city);
+        set("f_to_state",     f.to_state);
+        set("f_to_postal",    f.to_postal);
+
+        // Set service dropdown
+        const svc = document.getElementById("f_service");
+        for (let opt of svc.options) {
+            if (opt.value === f.service) { opt.selected = true; break; }
+        }
+
+        document.getElementById("previewSection").style.display = "block";
+        document.getElementById("previewSection").scrollIntoView({ behavior: "smooth" });
+
+    } catch(e) {
+        alert("Error: " + e.message);
+    } finally {
+        btn.disabled = false;
+        spin.style.display = "none";
+        icon.style.display = "inline";
+    }
+}
+</script>
+
+</body>
+</html>

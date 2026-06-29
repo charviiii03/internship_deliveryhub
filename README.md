@@ -1,885 +1,69 @@
+# DeliveryHub — Admin Portal
 
-# DeliveryHub API
-
-## Overview
-
-DeliveryHub is a Flask-based microservice that validates shipment requests and manages third-party application access through secure authentication and authorization mechanisms.
-
-The project includes:
-
-- Input validation APIs
-- Shipment label request processing
-- MariaDB database integration
-- Application authentication
-- Admin management APIs
-- Authentication logging
-- Automated testing using Pytest
+A Flask-based platform for secure application onboarding, shipment lifecycle management, and audit-ready authentication logging.
 
 ---
 
-## Features
+## Tech Stack
 
-- Text validation API
-- Shipment label generation API
-- MariaDB database integration
-- Application-based authentication
-- Secure token hashing
-- Application expiry validation
-- Admin application onboarding
-- Application status management
-- Authentication logging
-- Multi-environment database support
-- Automated testing using Pytest
-- Database setup automation
-- Error handling and validation
-- Email notification service
-- Automated credential delivery
-- Environment variable configuration
+- **Backend** — Python, Flask
+- **Database** — MySQL 8.0
+- **Email** — Flask-Mail (Gmail SMTP)
+- **PDF Extraction** — pdfplumber
+- **Frontend** — Bootstrap 5, Inter font, Font Awesome
+- **Containerisation** — Docker, Docker Compose
+- **Testing** — pytest
 
 ---
 
-## Project Architecture
+## Project Structure
 
-```text
-Client
-   |
-   v
-Flask API Service
-   |
-   +-------> Notification Service
-   |
-   v
-MariaDB Database
 ```
-
-### Communication Flow
-
-```text
-Client ---> Flask API
-
-Flask API ---> Validation Logic
-
-Flask API ---> MariaDB
-
-MariaDB ---> Flask API
-
-Flask API ---> JSON Response
-
-Flask API ---> Client
+deliveryhub/
+├── app_manager.py              # Main Flask app — admin UI + JSON API
+├── docshipp.py                 # Shipment validation & creation API
+├── db.py                       # MySQL connection helper
+├── notifications.py            # Email notification service
+├── pdf_extractor.py            # FedEx label PDF extraction module
+├── requirements.txt
+├── Dockerfile
+├── docker-compose.yml
+├── .env                        # Environment variables (not committed)
+├── sql/
+│   ├── schema.sql              # Database schema
+│   └── seed_test.sql           # Test seed data
+├── templates/
+│   ├── admin_dashboard.html
+│   ├── applications.html
+│   ├── auth_logs.html
+│   ├── create_application.html
+│   ├── create_shipment.html
+│   ├── create_shipment_from_text.html
+│   ├── create_shipment_from_pdf.html   # NEW — PDF extraction UI
+│   ├── application_created.html        # NEW — one-time credential display
+│   ├── edit_shipment.html
+│   ├── shipments.html
+│   ├── upload_label.html
+│   └── email_templates/
+│       ├── onboarding_email.md
+│       ├── renewal_email.md
+│       ├── inactive_email.md
+│       └── business_report_email.md
+└── uploads/                    # Uploaded PDF labels (auto-created)
 ```
 
 ---
 
-## Installation
+## Setup
 
-### Clone Repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/your-username/internship_deliveryhub.git
-
 cd internship_deliveryhub
 ```
 
-### Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## Database Setup
-
-Run:
-
-```bash
-./setup_db.sh
-```
-
-This script:
-
-- Creates development database
-- Creates test database
-- Creates production database
-- Creates required tables
-- Loads sample test data
-
----
-
-## Environment Configuration
-
-The application supports multiple environments.
-
-```bash
-APP_ENV=dev
-APP_ENV=test
-APP_ENV=production
-```
-
-Supported Databases:
-
-| Environment | Database |
-|------------|----------|
-| Development | deliveryhub_dev |
-| Testing | deliveryhub_test |
-| Production | deliveryhub_prod |
-
----
-
-## Running the Application
-
-Start Flask server:
-
-```bash
-python app.py
-```
-
-Server runs at:
-
-```text
-http://127.0.0.1:5000
-```
-
----
-
-# API Endpoints
-
-## Validate Text
-
-### Endpoint
-
-```http
-POST /validate
-```
-
-### Request
-
-```json
-{
-    "text": "Hello123"
-}
-```
-
-### Success Response
-
-```json
-{
-    "status": "valid"
-}
-```
-
-### Invalid Response
-
-```json
-{
-    "status": "invalid",
-    "reason": "Special characters found"
-}
-```
-
----
-
-## Generate Shipment Label
-
-### Endpoint
-
-```http
-POST /generate-label
-```
-
-### Required Fields
-
-```json
-{
-    "from_name": "Sender Name",
-    "from_address": "Sender Address",
-    "from_phone": "1234567890",
-    "to_name": "Receiver Name",
-    "to_address": "Receiver Address",
-    "to_phone": "0987654321",
-    "service": "FedEx Envelope International Priority"
-}
-```
-
-### Success Response
-
-```json
-{
-    "status": "valid"
-}
-```
-
-### Invalid Response
-
-```json
-{
-    "status": "invalid",
-    "reason": "Required field missing"
-}
-```
-
----
-
-# Authentication System
-
-Every application must authenticate before accessing protected APIs.
-
-Authentication uses:
-
-- application_id
-- application_token
-
-Similar to a username/password system.
-
----
-
-## Applications Table
-
-Stores:
-
-| Column | Description |
-|----------|-------------|
-| application_id | Unique application identifier |
-| application_token | Hashed application token |
-| application_name | Name of application |
-| user_email | Owner email |
-| expiry_date | Expiry date |
-| is_active | Active/Inactive status |
-
----
-
-## Secure Token Storage
-
-Application tokens are never stored in plain text.
-
-Tokens are hashed using:
-
-```python
-generate_password_hash()
-```
-
-Verification uses:
-
-```python
-check_password_hash()
-```
-
-This prevents token exposure even if the database is compromised.
-
----
-
-## Sign In
-
-### Endpoint
-
-```http
-POST /signin
-```
-
-### Request
-
-```json
-{
-    "application_id": "your_application_id",
-    "application_token": "your_application_token"
-}
-```
-
-### Success Response
-
-```json
-{
-    "status": "valid",
-    "message": "signin successful"
-}
-```
-
-### Failure Response
-
-```json
-{
-    "status": "invalid",
-    "reason": "invalid token"
-}
-```
-
----
-
-## Expiry Validation
-
-Applications are valid only when:
-
-```text
-expiry_date >= current_date
-```
-
-Expired applications automatically fail authentication.
-
----
-
-# Admin APIs
-
-## Create Application
-
-### Endpoint
-
-```http
-POST /admin/create-application
-```
-
-### Purpose
-
-- Create new application
-- Generate application ID
-- Generate secure token
-- Set default expiry period
-- Store application details
-
-Generated using:
-
-```python
-uuid.uuid4()
-secrets.token_urlsafe()
-```
-
----
-
-## View Applications
-
-### Endpoint
-
-```http
-GET /admin/applications
-```
-
-### Returns
-
-- application_id
-- application_name
-- user_email
-- expiry_date
-- is_active
-
-Example Response:
-
-```json
-{
-    "status": "success",
-    "applications": [...]
-}
-```
-
----
-
-## Update Expiry Date
-
-### Endpoint
-
-```http
-PUT /admin/update-expiry
-```
-
-### Purpose
-
-- Extend validity
-- Renew applications
-- Modify expiry dates
-
----
-
-## Update Application Status
-
-### Endpoint
-
-```http
-PUT /admin/update-status
-```
-
-### Purpose
-
-- Activate application
-- Deactivate application
-
-Authentication fails when:
-
-```text
-is_active = false
-```
-
-even if credentials are correct.
-
----
----
-
-# Notification Service
-
-## Purpose
-
-Automatically notify application owners when a new application is created through the App Manager system.
-
-The notification service sends application credentials to the registered email address after successful application creation.
-
----
-
-## Trigger Event
-
-### Endpoint
-
-```http
-POST /admin/create-application
-```
-
-### Notification Flow
-
-```text
-Admin
-   |
-   v
-Create Application
-   |
-   v
-Generate Application ID
-   |
-   v
-Generate Application Token
-   |
-   v
-Store Application Details
-   |
-   v
-Send Email Notification
-   |
-   v
-Application Owner
-```
-
----
-
-## Email Contents
-
-The notification email contains:
-
-- Application ID
-- Application Token
-- Expiry Date
-
-Example:
-
-```text
-Application ID:
-03e27fea-a515-4319-b0b1-f1ef4482453c
-
-Application Token:
-xxxxxxxxxxxxxxxxxxxxxxxx
-
-Expiry Date:
-2026-08-30
-```
-
----
-
-## Notification Module
-
-Notification functionality is implemented in a dedicated module:
-
-```text
-notifications.py
-```
-
-This module is responsible for:
-
-- Building email messages
-- Sending application credentials
-- Managing email delivery operations
-
----
-
-## Email Configuration
-
-SMTP settings are configured through environment variables.
-
-```env
-MAIL_USERNAME=<sender_email>
-MAIL_PASSWORD=<app_password>
-```
-
-Benefits:
-
-- Improved security
-- Credentials not stored in source code
-- Easier deployment across environments
-
----
-
-## Libraries Used
-
-```text
-Flask-Mail
-python-dotenv
-```
-
----
-
-## Future Notification Enhancements
-
-Planned improvements:
-
-- WhatsApp notifications
-- Shipment request notifications
-- Application expiry reminders
-- Notification retry mechanism
-- Admin alert notifications
-
----
-
-# Authentication Logs
-
-Authentication events are stored in:
-
-```text
-authentication_logs
-```
-
-Stored Information:
-
-| Field | Description |
-|---------|-------------|
-| application_id | Application making request |
-| request_time | Authentication timestamp |
-| status | Success / Failure |
-| reason | Failure reason |
-| ip_address | Request IP |
-
-Purpose:
-
-- Security monitoring
-- Audit trails
-- Failed login tracking
-- Troubleshooting
-
----
-
-# Automated Testing
-
-## Run Tests
-
-Stop Flask server first:
-
-```bash
-CTRL + C
-```
-
-Run tests:
-
-```bash
-pytest
-```
-
----
-
-## Test Cases
-
-### Valid Input
-
-```json
-{
-    "text": "Hello123"
-}
-```
-
-Expected:
-
-```json
-{
-    "status": "valid"
-}
-```
-
----
-
-### Invalid Input
-
-```json
-{
-    "text": "Hello@123"
-}
-```
-
-Expected:
-
-```json
-{
-    "status": "invalid"
-}
-```
-
----
-
-# Error Handling
-
-Database operations include exception handling.
-
-Example:
-
-```python
-try:
-    connection = get_db_connection()
-except Exception as e:
-    print(e)
-```
-
-Benefits:
-
-- Prevents crashes
-- Improves reliability
-- Provides meaningful error messages
-
----
-# DeliveryHub – Admin Management Portal
-
-## Overview
-
-The Admin Management Portal is a web-based administration console developed for managing applications, authentication logs, shipment requests, shipment labels, and overall system monitoring.
-
-The portal provides administrators with a centralized dashboard to monitor platform activity, onboard applications, track shipments, and manage authentication access.
-
----
-
-# Admin Dashboard
-
-The Admin Dashboard provides a centralized view of the entire system.
-
-### Features
-
-- Total Applications
-- Valid Authentication Requests
-- Invalid Authentication Requests
-- Total Shipments
-- Recent Activity Feed
-- Quick Actions Navigation
-- Shipment Summary Statistics
-
-### Access
-
-```text
-http://localhost:5001/admin-ui
-```
-
----
-
-# Admin UI Features
-
-## 1. Applications Management
-
-### Endpoint
-
-```text
-/admin-ui/applications
-```
-
-### Capabilities
-
-- View all registered applications
-- Search applications
-- View application status
-- Monitor expiry dates
-- Create new applications
-
----
-
-## 2. Authentication Logs
-
-### Endpoint
-
-```text
-/admin-ui/auth-logs
-```
-
-### Capabilities
-
-- View authentication attempts
-- Monitor successful logins
-- Monitor failed logins
-- Audit application access
-- View source IP addresses
-
----
-
-## 3. Shipment Management
-
-### Endpoint
-
-```text
-/ admin-ui/shipments
-```
-
-### Capabilities
-
-- View shipment requests
-- Monitor shipment status
-- Track shipment lifecycle
-- View sender and receiver information
-- View shipment validation results
-
----
-
-## 4. Create Shipment
-
-### Endpoint
-
-```text
-/admin-ui/create-shipment
-```
-
-### Capabilities
-
-- Create shipment requests directly from Admin UI
-- Validate sender information
-- Validate receiver information
-- Support India and USA shipment rules
-- Automatically create shipment tracking records
-
-### Validation Rules
-
-#### India
-
-| Field | Validation |
-|---------|------------|
-| Country Code | IN |
-| Phone Code | +91 |
-| Phone Length | 10 Digits |
-| Postal Code | 6 Digits |
-
-#### USA
-
-| Field | Validation |
-|---------|------------|
-| Country Code | US |
-| Phone Code | +1 |
-| Phone Length | 10 Digits |
-| Postal Code | 5 Digits |
-
----
-
-## 5. Upload Label
-
-### Endpoint
-
-```text
-/admin-ui/upload-label
-```
-
-### Capabilities
-
-- Upload shipment labels
-- Store uploaded label files
-- Associate labels with shipment requests
-
----
-
-# Docker Deployment
-
-The project is fully containerized using Docker and Docker Compose.
-
----
-
-## Services
-
-### App Manager
-
-**Container**
-
-```text
-deliveryhub_app_manager
-```
-
-### Responsibilities
-
-- Flask API
-- Admin Portal
-- Application Management
-- Shipment Processing
-- Notification Service
-
----
-
-### Database
-
-**Container**
-
-```text
-deliveryhub_db
-```
-
-**Image**
-
-```text
-mysql:8.0
-```
-
-### Responsibilities
-
-- Store applications
-- Store shipments
-- Store authentication logs
-- Store shipment tracking information
-
----
-
-# Docker Architecture
-
-```text
-+----------------------+
-|    Admin Portal      |
-|     Flask API        |
-+----------+-----------+
-           |
-           v
-+----------------------+
-|    MySQL Database    |
-|   deliveryhub_dev    |
-+----------------------+
-```
-
----
-
-# Running with Docker
-
-## Build Containers
-
-```bash
-docker compose up --build
-```
-
-## Run in Background
-
-```bash
-docker compose up -d
-```
-
-## Stop Containers
-
-```bash
-docker compose down
-```
-
-## View Running Containers
-
-```bash
-docker ps
-```
-
-## View Logs
-
-```bash
-docker compose logs -f
-```
-
----
-
-# Docker Environment Variables
-
-Example:
+### 2. Create `.env` file
 
 ```env
 APP_ENV=dev
@@ -891,203 +75,107 @@ DB_NAME=deliveryhub_dev
 
 MAIL_USERNAME=your_email@gmail.com
 MAIL_PASSWORD=your_app_password
+
+COMPANY_NAME=DeliveryHub
+COMPANY_WEBSITE=http://localhost:5001
+COMPANY_PHONE=+1-800-000-0000
+SUPPORT_EMAIL=support@deliveryhub.com
+```
+
+### 3. Run with Docker
+
+```bash
+docker compose up --build
+```
+
+### 4. Access the admin portal
+
+```
+http://localhost:5001/admin-ui
 ```
 
 ---
 
-# Project Structure
+## Admin Portal Pages
 
-```text
-internship_deliveryhub
-│
-├── app_manager.py
-├── db.py
-├── notifications.py
-├── Dockerfile
-├── docker-compose.yml
-├── requirements.txt
-│
-├── sql
-│   ├── schema.sql
-│   └── seed_test.sql
-│
-├── templates
-│   ├── admin_dashboard.html
-│   ├── applications.html
-│   ├── auth_logs.html
-│   ├── shipments.html
-│   ├── create_application.html
-│   ├── create_shipment.html
-│   └── upload_label.html
-│
-├── static
-│   └── logo.jpeg
-│
-├── uploads
-│
-└── tests
-    ├── test_app.py
-    └── test_integration.py
+| URL | Description |
+|-----|-------------|
+| `/admin-ui` | Dashboard — stats overview |
+| `/admin-ui/applications` | Manage client applications |
+| `/admin-ui/create-application` | Onboard a new client |
+| `/admin-ui/auth-logs` | Authentication audit trail |
+| `/admin-ui/shipments` | All shipment requests |
+| `/admin-ui/create-shipment` | Create shipment manually |
+| `/admin-ui/create-shipment-from-text` | Create from pasted text |
+| `/admin-ui/create-shipment-from-pdf` | **NEW** — Create from FedEx label PDF |
+| `/admin-ui/upload-label` | Upload PDF label to shipment |
+| `/admin-ui/edit-shipment/<id>` | Edit shipment service type |
+| `/admin-ui/view-label/<id>` | View uploaded label PDF |
+
+---
+
+## JSON API Endpoints
+
+| Method | URL | Description |
+|--------|-----|-------------|
+| POST | `/admin/create-application` | Create application (returns token once) |
+| GET  | `/admin/applications` | List all applications |
+| PUT  | `/admin/update-status` | Enable / disable application |
+| PUT  | `/admin/update-expiry` | Update application expiry date |
+| GET  | `/admin/auth-logs` | View authentication logs |
+| POST | `/validate-auth` | Validate application ID + token |
+| POST | `/signin` | Sign in with application credentials |
+| POST | `/validate` | Validate text input (docshipp) |
+| POST | `/generate-label` | Create shipment via API |
+| POST | `/admin-ui/extract-label` | **NEW** — Extract fields from PDF label |
+
+---
+
+## Bugs Fixed
+
+| # | File | Bug |
+|---|------|-----|
+| 1 | `docshipp.py` | `"to_phone"` string literal instead of `data["to_phone"]` — receiver phone was always saved as the text "to_phone" |
+| 2 | `app_manager.py` | Receiver address INSERT had 7 columns but only 6 placeholders — crashed every shipment creation |
+| 3 | `app_manager.py` | `SELECT id` should be `SELECT application_id` in create-shipment GET handler |
+| 4 | `app_manager.py` | Integration test was mocking `send_application_credentials` which doesn't exist — should be `send_onboarding_email` |
+| 5 | `notifications.py` | `send_report_email` read from `app.config` keys that were never set — now uses module-level env vars |
+| 6 | `create_shipment.html` | `app.id` used in dropdown — should be `app.application_id` |
+| 7 | `create_shipment.html` | `customers` variable used in template but never passed from backend |
+| 8 | `inactive_email.md` | `inactive_reason` was hardcoded text instead of `{{ inactive_reason }}` template variable |
+| 9 | `shipments.html` | Links to `/view-label/` and `/edit-shipment/` routes that didn't exist in backend |
+| 10 | `seed_test.sql` | `customers` INSERT missing required `email` column |
+| 11 | `seed_test.sql` | `address_line` column used but schema defines `address_line1` |
+
+---
+
+## New Features Added
+
+- **Application → Shipment linking** — `application_id` column added to `shipments` table; every shipment is now assigned to an application
+- **DeliveryHub default application** — seeded as the system default, pre-selected in all shipment forms
+- **Service type dropdown** — shipment service changed from free text to predefined options (Express, Economy, Priority, etc.)
+- **Shipment confirmation email** — sender receives an email after shipment is created
+- **PDF label extraction** — upload any FedEx international label PDF; all sender/receiver fields are extracted and pre-filled automatically
+- **`/view-label/<id>` route** — admin can view uploaded label PDFs directly from the shipments table
+- **`/edit-shipment/<id>` route** — admin can edit shipment service type
+- **`application_created.html`** — proper one-time credential display page replacing raw HTML string
+- **Live search** on applications, auth logs, and shipments tables
+- **Auth log filter** — filter by Success / Failure status
+
+---
+
+## Testing
+
+```bash
+pytest test_app.py test_auth.py test_integration_workflow.py -v
 ```
 
 ---
 
-# Database Schema
+## Security
 
-## customers
-
-Stores sender and receiver details.
-
-### Fields
-
-- customer_id
-- full_name
-- phone_number
-- email
-
----
-
-## addresses
-
-Stores shipment address information.
-
-### Fields
-
-- address_id
-- address_line1
-- address_line2
-- city
-- state_name
-- country
-- country_code
-- postal_code
-
----
-
-## shipments
-
-Stores shipment requests.
-
-### Fields
-
-- shipment_id
-- requestid
-- sender_customer_id
-- receiver_customer_id
-- from_address_id
-- to_address_id
-- service
-- validation_status
-- validation_reason
-- state
-- return_code
-- return_json
-
----
-
-## shipment_tracking
-
-Stores shipment tracking updates.
-
-### Fields
-
-- tracking_id
-- shipment_id
-- current_status
-- updated_time
-
----
-
-## applications
-
-Stores onboarded client applications.
-
-### Fields
-
-- application_id
-- application_token
-- application_name
-- user_email
-- expiry_date
-- is_active
-- created_at
-
----
-
-## authentication_logs
-
-Stores application authentication activity.
-
-### Fields
-
-- application_id
-- request_time
-- status
-- reason
-- ip_address
-
----
-
-# Security Features
-
-The following security mechanisms have been implemented:
-
-- Application Authentication
-- Token Hashing
-- Password Hashing
-- Expiry Validation
-- Active/Inactive Controls
-- Authentication Logging
-- Input Validation
-- Email-Based Credential Delivery
-- Environment Variable Configuration
-- Docker Container Isolation
-
----
-
-# Future Improvements
-
-Planned enhancements for future releases:
-
-- JWT Authentication
-- Role-Based Access Control (RBAC)
-- HTTPS with Nginx
-- Rate Limiting
-- Shipment Status Workflow Automation
-- Advanced Dashboard Analytics
-- WhatsApp Notifications
-- Application Expiry Reminders
-- Production Monitoring
-- Kubernetes Deployment
-
----
-
-# Key Technologies
-
-- Python
-- Flask
-- MySQL 8.0
-- Docker
-- Docker Compose
-- HTML
-- Bootstrap
-- Jinja2 Templates
-- SMTP Email Service
-- Pytest
-
----
-
-# Summary
-
-DeliveryHub Admin Management Portal provides a complete administrative interface for:
-
-- Application Onboarding
-- Authentication Monitoring
-- Shipment Creation & Tracking
-- Shipment Label Management
-- Email Notification Services
-- Secure Application Access Control
-
-The system is fully containerized using Docker, integrated with MySQL, secured through token-based authentication mechanisms, and designed for future scalability through Kubernetes and production-grade monitoring solutions.
-
-
+- Application tokens are hashed with bcrypt before storage — plaintext never persists in the database
+- Tokens are shown only once on creation
+- Every API auth attempt is logged with timestamp, status, reason, and IP address
+- Expired or inactive applications are rejected at every endpoint
+- PDF label upload validates `.pdf` extension before saving

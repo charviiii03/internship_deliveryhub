@@ -1,385 +1,440 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>DeliveryHub Admin Panel</title>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — DeliveryHub</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            background: #f5f7fb;
-            font-family: Arial, sans-serif;
+        :root {
+            --sidebar-bg:   #0f172a;
+            --sidebar-w:    240px;
+            --accent:       #3b82f6;
+            --accent-dark:  #1d4ed8;
+            --success:      #10b981;
+            --danger:       #ef4444;
+            --warning:      #f59e0b;
+            --page-bg:      #f1f5f9;
+            --card-bg:      #ffffff;
+            --text-primary: #0f172a;
+            --text-muted:   #64748b;
+            --border:       #e2e8f0;
+            --radius:       14px;
         }
 
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--page-bg); color: var(--text-primary); display: flex; min-height: 100vh; }
+
+        /* ── SIDEBAR ── */
         .sidebar {
-            width: 260px;
-            background: linear-gradient(180deg, #06244d, #02152e);
+            width: var(--sidebar-w);
+            background: var(--sidebar-bg);
             min-height: 100vh;
-            padding: 24px;
-            color: white;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+            position: fixed;
+            top: 0; left: 0;
+            z-index: 100;
         }
 
-        .sidebar-logo {
+        .sidebar-brand {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 35px;
+            gap: 10px;
+            padding: 0 8px 28px;
+            border-bottom: 1px solid rgba(255,255,255,.08);
+            margin-bottom: 20px;
         }
 
-        .sidebar-logo img {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: white;
-            padding: 4px;
-        }
-
-        .sidebar a {
-            display: block;
-            color: white;
-            text-decoration: none;
-            padding: 13px 16px;
+        .brand-icon {
+            width: 38px; height: 38px;
+            background: var(--accent);
             border-radius: 10px;
-            margin-bottom: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; color: white;
+            flex-shrink: 0;
+        }
+
+        .brand-text { line-height: 1.2; }
+        .brand-name { font-size: 15px; font-weight: 700; color: white; }
+        .brand-sub  { font-size: 10px; color: rgba(255,255,255,.4); letter-spacing: 1px; text-transform: uppercase; }
+
+        .nav-label  { font-size: 10px; color: rgba(255,255,255,.3); letter-spacing: 1.2px; text-transform: uppercase; padding: 0 12px; margin-bottom: 8px; }
+
+        .nav-link-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            color: rgba(255,255,255,.6);
+            text-decoration: none;
+            font-size: 14px;
             font-weight: 500;
+            margin-bottom: 2px;
+            transition: all .18s;
         }
+        .nav-link-item i { width: 18px; text-align: center; font-size: 13px; }
+        .nav-link-item:hover { background: rgba(255,255,255,.07); color: white; }
+        .nav-link-item.active { background: var(--accent); color: white; }
 
-        .sidebar a:hover,
-        .sidebar .active {
-            background: #1266f1;
-        }
-
-        .main-content {
+        /* ── MAIN ── */
+        .main {
+            margin-left: var(--sidebar-w);
             flex: 1;
-            padding: 30px;
+            padding: 32px;
+            min-width: 0;
         }
 
+        /* ── TOP BAR ── */
         .topbar {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
+            align-items: flex-start;
+            margin-bottom: 28px;
         }
 
-        .stat-card {
+        .page-title   { font-size: 26px; font-weight: 800; color: var(--text-primary); }
+        .page-subtitle{ font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+
+        .btn-primary-custom {
+            background: var(--accent);
+            color: white;
             border: none;
-            border-radius: 18px;
-            padding: 22px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-            min-height: 180px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background .18s;
+        }
+        .btn-primary-custom:hover { background: var(--accent-dark); color: white; }
+
+        /* ── STAT CARDS ── */
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 22px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
-        .stat-icon {
-            width: 55px;
-            height: 55px;
-            border-radius: 15px;
+        .stat-icon-wrap {
+            width: 44px; height: 44px;
+            border-radius: 11px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+        }
+
+        .stat-label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+        .stat-value { font-size: 32px; font-weight: 800; line-height: 1; }
+        .stat-trend { font-size: 12px; font-weight: 500; }
+        .trend-up   { color: var(--success); }
+        .trend-dn   { color: var(--danger); }
+
+        /* ── SECTION CARDS ── */
+        .section-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .section-title-text { font-size: 15px; font-weight: 700; }
+        .section-link { font-size: 13px; color: var(--accent); text-decoration: none; font-weight: 500; }
+        .section-link:hover { text-decoration: underline; }
+
+        /* ── QUICK ACTION CARDS ── */
+        .quick-action {
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            margin-bottom: 15px;
-        }
-
-        .section-card {
-            border: none;
-            border-radius: 18px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-        }
-
-        .quick-card {
-            border-radius: 18px;
-            border: 1px solid #e2e8f0;
-            padding: 22px;
-            background: white;
+            gap: 14px;
+            padding: 14px 16px;
+            border-radius: 11px;
+            border: 1px solid var(--border);
             text-decoration: none;
-            color: black;
-            display: block;
-            transition: 0.2s;
-            height: 100%;
+            color: var(--text-primary);
+            transition: all .18s;
+            margin-bottom: 10px;
         }
+        .quick-action:last-child { margin-bottom: 0; }
+        .quick-action:hover { border-color: var(--accent); background: #eff6ff; color: var(--accent); }
+        .qa-icon {
+            width: 38px; height: 38px;
+            border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .qa-label { font-size: 14px; font-weight: 600; }
+        .qa-sub   { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
 
-        .quick-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        }
+        /* ── SHIPMENT WEEK ── */
+        .week-stat { text-align: center; padding: 12px 0; }
+        .week-stat .number { font-size: 26px; font-weight: 800; line-height: 1; }
+        .week-stat .label  { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        .week-divider { width: 1px; background: var(--border); }
 
-        .activity-dot {
-            width: 10px;
-            height: 10px;
-            display: inline-block;
-            border-radius: 50%;
+        /* ── ACTIVITY ── */
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 0;
+            border-bottom: 1px solid var(--border);
         }
+        .activity-item:last-child { border-bottom: none; }
+        .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+        .activity-text { font-size: 13px; font-weight: 500; flex: 1; }
+        .activity-time { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+
+        /* ── HEALTH ── */
+        .health-row { margin-bottom: 16px; }
+        .health-row:last-child { margin-bottom: 0; }
+        .health-label-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; font-weight: 500; }
+        .progress { height: 6px; border-radius: 99px; background: #e2e8f0; }
+        .progress-bar { border-radius: 99px; transition: width .6s ease; }
     </style>
 </head>
-
 <body>
 
-<div class="d-flex">
-
-    <!-- Sidebar -->
-    <div class="sidebar">
-
-        <div class="sidebar-logo">
-            <img src="{{ url_for('static', filename='logo.jpeg') }}">
-            <div>
-                <h4 class="mb-0">DeliveryHub</h4>
-                <small>ADMIN CONSOLE</small>
-            </div>
+<!-- ══ SIDEBAR ══ -->
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon"><i class="fa-solid fa-truck-fast"></i></div>
+        <div class="brand-text">
+            <div class="brand-name">DeliveryHub</div>
+            <div class="brand-sub">Admin Console</div>
         </div>
-
-        <a href="/admin-ui" class="active">
-            <i class="fa-solid fa-table-cells-large me-2"></i> Dashboard
-        </a>
-
-        <a href="/admin-ui/applications">
-            <i class="fa-solid fa-building me-2"></i> Applications
-        </a>
-
-        <a href="/admin-ui/auth-logs">
-            <i class="fa-solid fa-shield-halved me-2"></i> Auth Logs
-        </a>
-
-        <a href="/admin-ui/shipments">
-            <i class="fa-solid fa-truck me-2"></i> Shipments
-        </a>
-
-        <a href="/admin-ui/upload-label">
-            <i class="fa-solid fa-file-arrow-up me-2"></i> Upload Label
-        </a>
-
     </div>
 
-    <!-- Main Content -->
-    <div class="main-content">
+    <div class="nav-label">Menu</div>
 
-        <!-- Topbar -->
-        <div class="topbar">
-            <div>
-                <h1 class="fw-bold">Dashboard</h1>
-                <p class="text-muted mb-0">Overview of DeliveryHub system</p>
+    <a href="/admin-ui" class="nav-link-item active">
+        <i class="fa-solid fa-gauge-high"></i> Dashboard
+    </a>
+    <a href="/admin-ui/applications" class="nav-link-item">
+        <i class="fa-solid fa-building"></i> Applications
+    </a>
+    <a href="/admin-ui/auth-logs" class="nav-link-item">
+        <i class="fa-solid fa-shield-halved"></i> Auth Logs
+    </a>
+    <a href="/admin-ui/shipments" class="nav-link-item">
+        <i class="fa-solid fa-boxes-stacked"></i> Shipments
+    </a>
+    <a href="/admin-ui/upload-label" class="nav-link-item">
+        <i class="fa-solid fa-file-arrow-up"></i> Upload Label
+    </a>
+</nav>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+
+    <!-- Top Bar -->
+    <div class="topbar">
+        <div>
+            <div class="page-title">Dashboard</div>
+            <div class="page-subtitle">Overview of the DeliveryHub system</div>
+        </div>
+        <a href="/admin-ui/create-application" class="btn-primary-custom">
+            <i class="fa-solid fa-plus"></i> New Application
+        </a>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon-wrap" style="background:#eff6ff">
+                    <i class="fa-solid fa-building" style="color:#3b82f6"></i>
+                </div>
+                <div>
+                    <div class="stat-label">Total Applications</div>
+                    <div class="stat-value">{{ total_applications }}</div>
+                </div>
+                <div class="stat-trend trend-up"><i class="fa-solid fa-arrow-trend-up me-1"></i>20% this month</div>
             </div>
-
-            <a href="/admin-ui/create-application" class="btn btn-dark px-4">
-                <i class="fa-solid fa-plus me-2"></i> New Application
-            </a>
         </div>
 
-        <!-- Stats -->
-        <div class="row g-4 mb-4">
-
-            <div class="col-md-3">
-                <div class="stat-card bg-warning-subtle">
-                    <div class="stat-icon bg-warning text-white">
-                        <i class="fa-solid fa-building"></i>
-                    </div>
-                    <p class="mb-1">Total Applications</p>
-                    <h2 class="fw-bold">{{ total_applications }}</h2>
-                    <small class="text-success">↑ 20% this month</small>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon-wrap" style="background:#f0fdf4">
+                    <i class="fa-solid fa-shield-halved" style="color:#10b981"></i>
                 </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="stat-card bg-info-subtle">
-                    <div class="stat-icon bg-primary text-white">
-                        <i class="fa-solid fa-shield-halved"></i>
-                    </div>
-                    <p class="mb-1">Valid Auth</p>
-                    <h2 class="fw-bold">{{ valid_auth }}</h2>
-                    <small class="text-success">↑ 18% this month</small>
+                <div>
+                    <div class="stat-label">Valid Auth</div>
+                    <div class="stat-value" style="color:#10b981">{{ valid_auth }}</div>
                 </div>
+                <div class="stat-trend trend-up"><i class="fa-solid fa-arrow-trend-up me-1"></i>18% this month</div>
             </div>
-
-            <div class="col-md-3">
-                <div class="stat-card bg-danger-subtle">
-                    <div class="stat-icon bg-danger text-white">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                    </div>
-                    <p class="mb-1">Invalid Auth</p>
-                    <h2 class="fw-bold">{{ invalid_auth }}</h2>
-                    <small class="text-danger">↓ 10% this month</small>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="stat-card bg-success-subtle">
-                    <div class="stat-icon bg-success text-white">
-                        <i class="fa-solid fa-truck"></i>
-                    </div>
-                    <p class="mb-1">Shipments</p>
-                    <h2 class="fw-bold">{{ total_shipments }}</h2>
-                    <small class="text-success">↑ 25% this month</small>
-                </div>
-            </div>
-
         </div>
 
-        <!-- Main Dashboard Sections -->
-        <div class="row g-4">
-
-            <!-- Quick Actions -->
-            <div class="col-lg-5">
-                <div class="card section-card p-4 h-100">
-
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="mb-0">Quick Actions</h4>
-                        <small class="text-muted">Common admin tasks</small>
-                    </div>
-
-                    <a href="/admin-ui/applications" class="quick-card mb-3">
-                        <i class="fa-solid fa-building fa-2x text-primary mb-3"></i>
-                        <h5>Applications</h5>
-                        <p class="text-muted mb-0">Manage all applications</p>
-                    </a>
-
-                    <a href="/admin-ui/auth-logs" class="quick-card mb-3">
-                        <i class="fa-solid fa-shield-halved fa-2x text-dark mb-3"></i>
-                        <h5>Auth Logs</h5>
-                        <p class="text-muted mb-0">View authentication logs</p>
-                    </a>
-
-                    <a href="/admin-ui/shipments" class="quick-card mb-3">
-                        <i class="fa-solid fa-truck fa-2x text-success mb-3"></i>
-                        <h5>Shipments</h5>
-                        <p class="text-muted mb-0">View shipment requests</p>
-                    </a>
-
-                    <a href="/admin-ui/upload-label" class="quick-card">
-                        <i class="fa-solid fa-file-arrow-up fa-2x text-warning mb-3"></i>
-                        <h5>Upload Label</h5>
-                        <p class="text-muted mb-0">Upload PDF label</p>
-                    </a>
-
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon-wrap" style="background:#fef2f2">
+                    <i class="fa-solid fa-triangle-exclamation" style="color:#ef4444"></i>
                 </div>
+                <div>
+                    <div class="stat-label">Invalid Auth</div>
+                    <div class="stat-value" style="color:#ef4444">{{ invalid_auth }}</div>
+                </div>
+                <div class="stat-trend trend-dn"><i class="fa-solid fa-arrow-trend-down me-1"></i>10% this month</div>
             </div>
+        </div>
 
-            <!-- Right Side -->
-            <div class="col-lg-7">
-
-                <!-- Shipments This Week -->
-                <div class="card section-card p-4 mb-4">
-
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="mb-0">Shipments This Week</h4>
-                        <a href="/admin-ui/shipments" class="text-decoration-none">View all →</a>
-                    </div>
-
-                    <div class="row text-center">
-
-                        <div class="col">
-                            <h3 class="text-success fw-bold">18</h3>
-                            <small class="text-muted">Valid</small>
-                        </div>
-
-                        <div class="col">
-                            <h3 class="text-danger fw-bold">4</h3>
-                            <small class="text-muted">Invalid</small>
-                        </div>
-
-                        <div class="col">
-                            <h3 class="text-warning fw-bold">3</h3>
-                            <small class="text-muted">Pending Labels</small>
-                        </div>
-
-                        <div class="col">
-                            <h3 class="text-primary fw-bold">12</h3>
-                            <small class="text-muted">Completed</small>
-                        </div>
-
-                    </div>
-
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon-wrap" style="background:#fffbeb">
+                    <i class="fa-solid fa-boxes-stacked" style="color:#f59e0b"></i>
                 </div>
-
-                <!-- Recent Activity -->
-                <div class="card section-card p-4 mb-4">
-
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="mb-0">Recent Activity</h4>
-                        <a href="/admin-ui/auth-logs" class="text-decoration-none">See all →</a>
-                    </div>
-
-                    <div class="list-group list-group-flush">
-
-                        <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="activity-dot bg-success me-2"></span>
-                                <strong>app123 authenticated successfully</strong>
-                            </div>
-                            <small class="text-muted">2 min ago</small>
-                        </div>
-
-                        <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="activity-dot bg-warning me-2"></span>
-                                <strong>Shipment SHP-289 assigned for processing</strong>
-                            </div>
-                            <small class="text-muted">9 min ago</small>
-                        </div>
-
-                        <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="activity-dot bg-danger me-2"></span>
-                                <strong>3 invalid auth attempts blocked</strong>
-                            </div>
-                            <small class="text-muted">21 min ago</small>
-                        </div>
-
-                        <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="activity-dot bg-primary me-2"></span>
-                                <strong>Label uploaded for SHP-288</strong>
-                            </div>
-                            <small class="text-muted">1 hr ago</small>
-                        </div>
-
-                    </div>
-
+                <div>
+                    <div class="stat-label">Shipments</div>
+                    <div class="stat-value">{{ total_shipments }}</div>
                 </div>
-
-                <!-- System Health -->
-                <div class="card section-card p-4">
-
-                    <h4 class="mb-3">System Health</h4>
-
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between">
-                            <span>Database Connection</span>
-                            <strong class="text-success">Healthy</strong>
-                        </div>
-                        <div class="progress mt-2">
-                            <div class="progress-bar bg-success" style="width:95%"></div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between">
-                            <span>Auth Service</span>
-                            <strong class="text-success">Running</strong>
-                        </div>
-                        <div class="progress mt-2">
-                            <div class="progress-bar bg-primary" style="width:88%"></div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="d-flex justify-content-between">
-                            <span>Notification Service</span>
-                            <strong class="text-warning">Active</strong>
-                        </div>
-                        <div class="progress mt-2">
-                            <div class="progress-bar bg-warning" style="width:76%"></div>
-                        </div>
-                    </div>
-
-                </div>
-
+                <div class="stat-trend trend-up"><i class="fa-solid fa-arrow-trend-up me-1"></i>25% this month</div>
             </div>
-
         </div>
 
     </div>
 
-</div>
+    <!-- Lower Grid -->
+    <div class="row g-3">
+
+        <!-- Quick Actions -->
+        <div class="col-lg-4">
+            <div class="section-card h-100">
+                <div class="section-header">
+                    <span class="section-title-text">Quick Actions</span>
+                    <span style="font-size:12px;color:var(--text-muted)">Common tasks</span>
+                </div>
+
+                <a href="/admin-ui/applications" class="quick-action">
+                    <div class="qa-icon" style="background:#eff6ff"><i class="fa-solid fa-building" style="color:#3b82f6"></i></div>
+                    <div><div class="qa-label">Applications</div><div class="qa-sub">Manage all applications</div></div>
+                </a>
+                <a href="/admin-ui/auth-logs" class="quick-action">
+                    <div class="qa-icon" style="background:#f0fdf4"><i class="fa-solid fa-shield-halved" style="color:#10b981"></i></div>
+                    <div><div class="qa-label">Auth Logs</div><div class="qa-sub">View authentication logs</div></div>
+                </a>
+                <a href="/admin-ui/shipments" class="quick-action">
+                    <div class="qa-icon" style="background:#fffbeb"><i class="fa-solid fa-boxes-stacked" style="color:#f59e0b"></i></div>
+                    <div><div class="qa-label">Shipments</div><div class="qa-sub">View shipment requests</div></div>
+                </a>
+                <a href="/admin-ui/upload-label" class="quick-action">
+                    <div class="qa-icon" style="background:#fef2f2"><i class="fa-solid fa-file-arrow-up" style="color:#ef4444"></i></div>
+                    <div><div class="qa-label">Upload Label</div><div class="qa-sub">Attach PDF label to shipment</div></div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Right column -->
+        <div class="col-lg-8">
+
+            <!-- Shipments This Week -->
+            <div class="section-card mb-3">
+                <div class="section-header">
+                    <span class="section-title-text">Shipments This Week</span>
+                    <a href="/admin-ui/shipments" class="section-link">View all →</a>
+                </div>
+                <div class="d-flex">
+                    <div class="week-stat flex-fill">
+                        <div class="number" style="color:#10b981">18</div>
+                        <div class="label">Valid</div>
+                    </div>
+                    <div class="week-divider"></div>
+                    <div class="week-stat flex-fill">
+                        <div class="number" style="color:#ef4444">4</div>
+                        <div class="label">Invalid</div>
+                    </div>
+                    <div class="week-divider"></div>
+                    <div class="week-stat flex-fill">
+                        <div class="number" style="color:#f59e0b">3</div>
+                        <div class="label">Pending Labels</div>
+                    </div>
+                    <div class="week-divider"></div>
+                    <div class="week-stat flex-fill">
+                        <div class="number" style="color:#3b82f6">12</div>
+                        <div class="label">Completed</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="section-card mb-3">
+                <div class="section-header">
+                    <span class="section-title-text">Recent Activity</span>
+                    <a href="/admin-ui/auth-logs" class="section-link">See all →</a>
+                </div>
+                <div class="activity-item">
+                    <div class="dot" style="background:#10b981"></div>
+                    <div class="activity-text">app123 authenticated successfully</div>
+                    <div class="activity-time">2 min ago</div>
+                </div>
+                <div class="activity-item">
+                    <div class="dot" style="background:#f59e0b"></div>
+                    <div class="activity-text">Shipment SHP-289 assigned for processing</div>
+                    <div class="activity-time">9 min ago</div>
+                </div>
+                <div class="activity-item">
+                    <div class="dot" style="background:#ef4444"></div>
+                    <div class="activity-text">3 invalid auth attempts blocked</div>
+                    <div class="activity-time">21 min ago</div>
+                </div>
+                <div class="activity-item">
+                    <div class="dot" style="background:#3b82f6"></div>
+                    <div class="activity-text">Label uploaded for SHP-288</div>
+                    <div class="activity-time">1 hr ago</div>
+                </div>
+            </div>
+
+            <!-- System Health -->
+            <div class="section-card">
+                <div class="section-header">
+                    <span class="section-title-text">System Health</span>
+                </div>
+                <div class="health-row">
+                    <div class="health-label-row">
+                        <span>Database Connection</span>
+                        <span style="color:#10b981;font-weight:600">Healthy</span>
+                    </div>
+                    <div class="progress"><div class="progress-bar bg-success" style="width:95%"></div></div>
+                </div>
+                <div class="health-row">
+                    <div class="health-label-row">
+                        <span>Auth Service</span>
+                        <span style="color:#3b82f6;font-weight:600">Running</span>
+                    </div>
+                    <div class="progress"><div class="progress-bar" style="width:88%;background:#3b82f6"></div></div>
+                </div>
+                <div class="health-row">
+                    <div class="health-label-row">
+                        <span>Notification Service</span>
+                        <span style="color:#f59e0b;font-weight:600">Active</span>
+                    </div>
+                    <div class="progress"><div class="progress-bar" style="width:76%;background:#f59e0b"></div></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</main>
 
 </body>
 </html>

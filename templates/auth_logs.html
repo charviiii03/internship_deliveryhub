@@ -1,222 +1,139 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Auth Logs - DeliveryHub</title>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Logs — DeliveryHub</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            background: #f7f9fc;
-            font-family: Arial, sans-serif;
-        }
+        :root{--sidebar-bg:#0f172a;--sidebar-w:240px;--accent:#3b82f6;--accent-dark:#1d4ed8;--success:#10b981;--danger:#ef4444;--page-bg:#f1f5f9;--card-bg:#ffffff;--text-primary:#0f172a;--text-muted:#64748b;--border:#e2e8f0;--radius:14px;}
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Inter',sans-serif;background:var(--page-bg);color:var(--text-primary);display:flex;min-height:100vh;}
+        .sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);min-height:100vh;display:flex;flex-direction:column;padding:24px 16px;position:fixed;top:0;left:0;z-index:100;}
+        .sidebar-brand{display:flex;align-items:center;gap:10px;padding:0 8px 28px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:20px;}
+        .brand-icon{width:38px;height:38px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:white;flex-shrink:0;}
+        .brand-name{font-size:15px;font-weight:700;color:white;line-height:1.2;}
+        .brand-sub{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:1px;text-transform:uppercase;}
+        .nav-label{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:1.2px;text-transform:uppercase;padding:0 12px;margin-bottom:8px;}
+        .nav-link-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:rgba(255,255,255,.6);text-decoration:none;font-size:14px;font-weight:500;margin-bottom:2px;transition:all .18s;}
+        .nav-link-item i{width:18px;text-align:center;font-size:13px;}
+        .nav-link-item:hover{background:rgba(255,255,255,.07);color:white;}
+        .nav-link-item.active{background:var(--accent);color:white;}
+        .main{margin-left:var(--sidebar-w);flex:1;padding:32px;min-width:0;}
+        .topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;}
+        .page-title{font-size:26px;font-weight:800;}
+        .page-subtitle{font-size:14px;color:var(--text-muted);margin-top:2px;}
+        .btn-outline-custom{background:transparent;color:var(--text-primary);border:1px solid var(--border);padding:9px 18px;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .18s;}
+        .btn-outline-custom:hover{border-color:var(--accent);color:var(--accent);}
+        .card-panel{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:24px;}
+        .table-clean thead th{background:#f8fafc;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px;padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600;}
+        .table-clean tbody td{padding:13px 16px;font-size:13px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+        .table-clean tbody tr:last-child td{border-bottom:none;}
+        .table-clean tbody tr:hover td{background:#fafbfd;}
+        .badge-success{background:#dcfce7;color:#15803d;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:600;}
+        .badge-failure{background:#fee2e2;color:#b91c1c;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:600;}
+        .app-id-cell{font-family:monospace;font-size:12px;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .search-wrap{position:relative;}
+        .search-wrap i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:13px;}
+        .search-wrap input{padding-left:36px;height:40px;border-radius:10px;border:1px solid var(--border);font-size:14px;width:260px;}
+        .search-wrap input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.1);}
 
-        .sidebar {
-            width: 260px;
-            min-height: 100vh;
-            background: #ffffff;
-            border-right: 1px solid #e5e7eb;
-            padding: 24px;
-        }
-
-        .sidebar-logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 35px;
-        }
-
-        .sidebar-logo img {
-            width: 46px;
-            height: 46px;
-            border-radius: 14px;
-            background: white;
-            object-fit: cover;
-        }
-
-        .sidebar-title {
-            font-weight: 700;
-            font-size: 20px;
-        }
-
-        .sidebar-small {
-            font-size: 11px;
-            color: #6b7280;
-            letter-spacing: 1px;
-        }
-
-        .sidebar a {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: #374151;
-            text-decoration: none;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            font-weight: 500;
-        }
-
-        .sidebar a:hover,
-        .sidebar .active {
-            background: #2563eb;
-            color: white;
-        }
-
-        .main-content {
-            flex: 1;
-            padding: 32px;
-        }
-
-        .topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 28px;
-        }
-
-        .page-card {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 18px;
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-        }
-
-        .table thead th {
-            background: #f8fafc;
-            color: #475569;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .table td {
-            vertical-align: middle;
-            font-size: 14px;
-        }
-
-        .status-success {
-            background: #dcfce7;
-            color: #15803d;
-            padding: 6px 12px;
-            border-radius: 999px;
-            font-weight: 600;
-            font-size: 12px;
-        }
-
-        .status-failure {
-            background: #fee2e2;
-            color: #b91c1c;
-            padding: 6px 12px;
-            border-radius: 999px;
-            font-weight: 600;
-            font-size: 12px;
-        }
+        .filter-btn{padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:white;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;color:var(--text-primary);}
+        .filter-btn.active,.filter-btn:hover{border-color:var(--accent);color:var(--accent);background:#eff6ff;}
     </style>
 </head>
-
 <body>
 
-<div class="d-flex">
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon"><i class="fa-solid fa-truck-fast"></i></div>
+        <div><div class="brand-name">DeliveryHub</div><div class="brand-sub">Admin Console</div></div>
+    </div>
+    <div class="nav-label">Menu</div>
+    <a href="/admin-ui" class="nav-link-item"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+    <a href="/admin-ui/applications" class="nav-link-item"><i class="fa-solid fa-building"></i> Applications</a>
+    <a href="/admin-ui/auth-logs" class="nav-link-item active"><i class="fa-solid fa-shield-halved"></i> Auth Logs</a>
+    <a href="/admin-ui/shipments" class="nav-link-item"><i class="fa-solid fa-boxes-stacked"></i> Shipments</a>
+    <a href="/admin-ui/upload-label" class="nav-link-item"><i class="fa-solid fa-file-arrow-up"></i> Upload Label</a>
+</nav>
 
-    <div class="sidebar">
+<main class="main">
 
-        <div class="sidebar-logo">
-            <img src="{{ url_for('static', filename='logo.jpeg') }}">
-            <div>
-                <div class="sidebar-title">DeliveryHub</div>
-                <div class="sidebar-small">ADMIN CONSOLE</div>
-            </div>
+    <div class="topbar">
+        <div>
+            <div class="page-title">Authentication Logs</div>
+            <div class="page-subtitle">Full audit trail of every API authentication attempt</div>
         </div>
-
-        <a href="/admin-ui">
-            <i class="fa-solid fa-table-cells-large"></i> Dashboard
-        </a>
-
-        <a href="/admin-ui/applications">
-            <i class="fa-solid fa-building"></i> Applications
-        </a>
-
-        <a href="/admin-ui/auth-logs" class="active">
-            <i class="fa-solid fa-shield-halved"></i> Auth Logs
-        </a>
-
-        <a href="/admin-ui/shipments">
-            <i class="fa-solid fa-truck"></i> Shipments
-        </a>
-
-        <a href="/admin-ui/upload-label">
-            <i class="fa-solid fa-file-arrow-up"></i> Upload Label
-        </a>
-
+        <a href="/admin-ui" class="btn-outline-custom"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
     </div>
 
-    <div class="main-content">
-
-        <div class="topbar">
-            <div>
-                <h1 class="fw-bold mb-1">Authentication Logs</h1>
-                <p class="text-muted mb-0">Monitor valid and invalid authentication requests.</p>
+    <div class="card-panel">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div class="d-flex gap-2">
+                <button class="filter-btn active" onclick="filterLogs('all', this)">All</button>
+                <button class="filter-btn" onclick="filterLogs('success', this)">Success</button>
+                <button class="filter-btn" onclick="filterLogs('failure', this)">Failure</button>
             </div>
-
-            <a href="/admin-ui" class="btn btn-outline-dark">
-                <i class="fa-solid fa-arrow-left me-2"></i> Dashboard
-            </a>
+            <div class="search-wrap">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" placeholder="Search logs…">
+            </div>
         </div>
 
-        <div class="page-card p-4">
-
-            <div class="table-responsive">
-
-                <table class="table table-hover align-middle mb-0">
-
-                    <thead>
-                        <tr>
-                            <th>Application ID</th>
-                            <th>Endpoint</th>
-                            <th>Time</th>
-                            <th>Status</th>
-                            <th>Reason</th>
-                            <th>IP Address</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                    {% for log in logs %}
-                        <tr>
-                            <td style="max-width: 260px; word-break: break-all;">
-                                {{ log.application_id }}
-                            </td>
-
-                            <td>{{ log.endpoint }}</td>
-
-                            <td>{{ log.request_time }}</td>
-
-                            <td>
-                                {% if log.status == "success" %}
-                                    <span class="status-success">Success</span>
-                                {% else %}
-                                    <span class="status-failure">Failure</span>
-                                {% endif %}
-                            </td>
-
-                            <td>{{ log.reason }}</td>
-
-                            <td>{{ log.ip_address }}</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-
-                </table>
-
-            </div>
-
+        <div class="table-responsive">
+            <table class="table table-clean mb-0" id="logsTable">
+                <thead>
+                    <tr>
+                        <th>Application ID</th>
+                        <th>Endpoint</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Reason</th>
+                        <th>IP Address</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for log in logs %}
+                <tr data-status="{{ log.status }}">
+                    <td><div class="app-id-cell" title="{{ log.application_id }}">{{ log.application_id }}</div></td>
+                    <td><code style="font-size:12px;color:#7c3aed;background:#f5f3ff;padding:2px 7px;border-radius:5px;">{{ log.endpoint }}</code></td>
+                    <td style="color:var(--text-muted);white-space:nowrap">{{ log.request_time }}</td>
+                    <td>
+                        {% if log.status == "success" %}
+                            <span class="badge-success"><i class="fa-solid fa-check me-1"></i>Success</span>
+                        {% else %}
+                            <span class="badge-failure"><i class="fa-solid fa-xmark me-1"></i>Failure</span>
+                        {% endif %}
+                    </td>
+                    <td style="color:var(--text-muted);font-size:12px;">{{ log.reason or "—" }}</td>
+                    <td style="font-family:monospace;font-size:12px;color:var(--text-muted)">{{ log.ip_address }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
-
     </div>
 
-</div>
+</main>
+
+<script>
+function filterLogs(status, btn) {
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll("#logsTable tbody tr").forEach(row => {
+        row.style.display = (status === "all" || row.dataset.status === status) ? "" : "none";
+    });
+}
+
+document.getElementById("searchInput").addEventListener("input", function () {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll("#logsTable tbody tr").forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(q) ? "" : "none";
+    });
+});
+</script>
 
 </body>
 </html>
