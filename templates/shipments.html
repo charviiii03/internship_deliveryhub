@@ -66,6 +66,22 @@
         .search-wrap i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:13px;}
         .search-wrap input{padding-left:36px;height:38px;border-radius:10px;border:1px solid var(--border);font-size:13px;width:240px;}
         .search-wrap input:focus{outline:none;border-color:var(--accent);}
+
+        .tracking-link{
+            color:#2563eb;
+            font-weight:600;
+            text-decoration:none;
+            font-size:12px;
+            font-family:monospace;
+        }
+        .tracking-link:hover{
+            text-decoration:underline;
+        }
+        .tracking-unavailable{
+            color:var(--text-muted);
+            font-size:12px;
+            font-style:italic;
+        }
     </style>
 </head>
 <body>
@@ -81,6 +97,7 @@
     <a href="/admin-ui/auth-logs" class="nav-link-item"><i class="fa-solid fa-shield-halved"></i> Auth Logs</a>
     <a href="/admin-ui/shipments" class="nav-link-item active"><i class="fa-solid fa-boxes-stacked"></i> Shipments</a>
     <a href="/admin-ui/upload-label" class="nav-link-item"><i class="fa-solid fa-file-arrow-up"></i> Upload Label</a>
+    <a href="/admin-ui/create-shipment-from-pdf" class="nav-link-item"><i class="fa-solid fa-file-import"></i> Create from PDF</a>
 </nav>
 
 <main class="main">
@@ -148,6 +165,7 @@
                         <th>Receiver</th>
                         <th>Route</th>
                         <th>Service</th>
+                        <th>Tracking</th>
                         <th>Validation</th>
                         <th>Label</th>
                         <th>Actions</th>
@@ -168,6 +186,16 @@
                     </td>
                     <td><span class="route-badge">{{ shipment.from_country }} → {{ shipment.to_country }}</span></td>
                     <td style="font-size:12px;color:var(--text-muted)">{{ shipment.service }}</td>
+                    <td>
+                        {% if shipment.tracking_number %}
+                            <a href="https://www.fedex.com/fedextrack/?trknbr={{ shipment.tracking_number }}"
+                               target="_blank" rel="noopener" class="tracking-link">
+                                {{ shipment.tracking_number }}
+                            </a>
+                        {% else %}
+                            <span class="tracking-unavailable">Not Available</span>
+                        {% endif %}
+                    </td>
                     <td>
                         {% if shipment.validation_status == "valid" %}
                             <span class="badge-valid">Valid</span>

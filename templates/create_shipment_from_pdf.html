@@ -116,12 +116,21 @@
 
             <!-- Metadata chips -->
             <div class="meta-row">
-                <div class="meta-chip">Tracking: <strong id="meta_tracking">—</strong></div>
+                <div class="meta-chip">
+                    Tracking:
+                    <strong id="meta_tracking">Not available</strong>
+                    <a href="#" id="meta_tracking_link" target="_blank" rel="noopener"
+                       style="display:none; margin-left:6px; color:var(--accent); font-weight:600; text-decoration:none;">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Track
+                    </a>
+                </div>
                 <div class="meta-chip">Ship Date: <strong id="meta_date">—</strong></div>
                 <div class="meta-chip">Reference: <strong id="meta_ref">—</strong></div>
             </div>
 
             <form method="POST" action="/admin-ui/create-shipment" id="shipmentForm">
+
+                <input type="hidden" name="tracking_number" id="f_tracking_number">
 
                 <!-- Application -->
                 <div class="section-divider"><i class="fa-solid fa-layer-group"></i> Application</div>
@@ -249,6 +258,11 @@ function onFileSelected(input) {
         document.getElementById("fileChosen").textContent = "✓ " + selectedFile.name;
         document.getElementById("fileChosen").style.display = "block";
         document.getElementById("extractBtn").disabled = false;
+
+        // Reset tracking display whenever a new file is chosen
+        document.getElementById("meta_tracking").textContent = "Not available";
+        document.getElementById("meta_tracking_link").style.display = "none";
+        document.getElementById("f_tracking_number").value = "";
     }
 }
 
@@ -287,10 +301,27 @@ async function extractPDF() {
 
         const f = data.fields;
 
-        // Fill meta chips
-        document.getElementById("meta_tracking").textContent = f.tracking_number || "—";
-        document.getElementById("meta_date").textContent     = f.ship_date       || "—";
-        document.getElementById("meta_ref").textContent      = f.reference        || "—";
+        // Fill tracking number + clickable FedEx track link
+        const trackingEl     = document.getElementById("meta_tracking");
+        const trackingLink   = document.getElementById("meta_tracking_link");
+        const trackingHidden = document.getElementById("f_tracking_number");
+
+        if (f.tracking_number) {
+            trackingEl.textContent = f.tracking_number;
+            trackingHidden.value = f.tracking_number;
+
+            const fedexUrl = `https://www.fedex.com/fedextrack/?trknbr=${encodeURIComponent(f.tracking_number)}`;
+            trackingLink.href = fedexUrl;
+            trackingLink.style.display = "inline-block";
+        } else {
+            trackingEl.textContent = "Not available";
+            trackingHidden.value = "";
+            trackingLink.style.display = "none";
+        }
+
+        // Fill other meta chips
+        document.getElementById("meta_date").textContent = f.ship_date  || "—";
+        document.getElementById("meta_ref").textContent  = f.reference  || "—";
 
         // Fill form fields
         const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ""; };

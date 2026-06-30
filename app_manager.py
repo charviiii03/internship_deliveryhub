@@ -3,9 +3,11 @@
 
 import uuid
 import os
+import re
 import secrets
 from datetime import datetime, timedelta
 
+import pdfplumber
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, render_template, redirect, url_for, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -437,8 +439,10 @@ def _get_all_shipments():
                s.validation_status,
                s.validation_reason,
                s.state,
+               s.tracking_number,
                s.return_code,
                s.created_at,
+               s.tracking_number,
                sender.full_name  AS sender_name,
                sender.email      AS sender_email,
                receiver.full_name AS receiver_name,
@@ -452,7 +456,12 @@ def _get_all_shipments():
            JOIN customers receiver ON s.receiver_customer_id = receiver.customer_id
            JOIN addresses from_addr ON s.from_address_id     = from_addr.address_id
            JOIN addresses to_addr   ON s.to_address_id       = to_addr.address_id
-           LEFT JOIN shipment_labels sl ON s.shipment_id     = sl.shipment_id
+           LEFT JOIN shipment_labels sl
+    ON sl.label_id = (
+        SELECT MAX(sl2.label_id)
+        FROM shipment_labels sl2
+        WHERE sl2.shipment_id = s.shipment_id
+    )
            ORDER BY s.shipment_id DESC"""
     )
     shipments = cur.fetchall()
@@ -526,6 +535,10 @@ def admin_ui_create_shipment():
     service            = request.form.get("service")
     application_id     = request.form.get("application_id")
 
+    # NEW: tracking number, populated by the "Create Shipment from PDF" flow
+    # (will be empty/None for shipments created via the manual form)
+    tracking_number     = request.form.get("tracking_number") or None
+
     # Validation
     def validate_country_rules(country, country_code, phone_code, phone, postal, label):
         if country == "India":
@@ -595,18 +608,20 @@ def admin_ui_create_shipment():
     )
     to_address_id = cur.lastrowid
 
-    # Shipment — now includes application_id
+    # Shipment — now includes application_id and tracking_number
     cur.execute(
         """INSERT INTO shipments(
                requestid, application_id,
                sender_customer_id, receiver_customer_id,
                from_address_id, to_address_id,
-               service, validation_status, validation_reason, state, return_code
-           ) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+               service, validation_status, validation_reason, state, return_code,
+               tracking_number
+           ) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
         (requestid, application_id,
          sender_customer_id, receiver_customer_id,
          from_address_id, to_address_id,
-         service, "valid", "No issues", "initiated", 200)
+         service, "valid", "No issues", "initiated", 200,
+         tracking_number)
     )
     shipment_id = cur.lastrowid
 
@@ -711,7 +726,7 @@ def admin_ui_upload_label():
         return render_template("upload_label.html", shipment_id=shipment_id)
 
     shipment_id = request.form.get("shipment_id")
-    label_file  = request.files.get("label_file")
+    label_file = request.files.get("label_file")
 
     if not shipment_id or not label_file:
         return "Shipment ID and PDF file are required", 400
@@ -720,12 +735,15 @@ def admin_ui_upload_label():
         return "Only PDF files are allowed", 400
 
     conn = get_db_connection()
-    cur  = conn.cursor()
+    cur = conn.cursor()
 
     cur.execute(
-        """SELECT c.email FROM shipments s
-           JOIN customers c ON s.receiver_customer_id = c.customer_id
-           WHERE s.shipment_id = %s""",
+        """
+        SELECT c.email
+        FROM shipments s
+        JOIN customers c ON s.receiver_customer_id = c.customer_id
+        WHERE s.shipment_id = %s
+        """,
         (shipment_id,)
     )
     receiver = cur.fetchone()
@@ -738,33 +756,62 @@ def admin_ui_upload_label():
     customer_email = receiver[0]
 
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
-    filename  = secure_filename(label_file.filename)
+
+    filename = secure_filename(label_file.filename)
     file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
     label_file.save(file_path)
 
+    tracking_number = None
+
+    try:
+        tracking_number = extract_tracking_number_from_pdf(file_path)
+    except Exception as e:
+        print("Tracking number extraction failed:", e)
+
     cur.execute(
-        """INSERT INTO shipment_labels(shipment_id, file_name, file_path, emailed_to_customer)
-           VALUES(%s,%s,%s,%s)""",
+        """
+        INSERT INTO shipment_labels
+        (shipment_id, file_name, file_path, emailed_to_customer)
+        VALUES (%s, %s, %s, %s)
+        """,
         (shipment_id, filename, file_path, False)
     )
-    cur.execute("UPDATE shipments SET state = 'label_uploaded' WHERE shipment_id = %s", (shipment_id,))
+
+    cur.execute(
+        """
+        UPDATE shipments
+        SET state = 'label_uploaded',
+            tracking_number = %s
+        WHERE shipment_id = %s
+        """,
+        (tracking_number, shipment_id)
+    )
+
     conn.commit()
 
     try:
         send_label_notification(app, customer_email, shipment_id, file_path)
+
         cur.execute(
-            """UPDATE shipment_labels SET emailed_to_customer = TRUE
-               WHERE shipment_id = %s ORDER BY label_id DESC LIMIT 1""",
+            """
+            UPDATE shipment_labels
+            SET emailed_to_customer = TRUE
+            WHERE shipment_id = %s
+            ORDER BY label_id DESC
+            LIMIT 1
+            """,
             (shipment_id,)
         )
+
         conn.commit()
+
     except Exception as e:
         print("Label email failed:", e)
 
     cur.close()
     conn.close()
-    return redirect(url_for("admin_ui_shipments"))
 
+    return redirect(url_for("admin_ui_shipments"))
 
 # FIX Bug 9: /view-label route was missing — now added
 @app.route("/admin-ui/view-label/<int:shipment_id>")
@@ -805,64 +852,110 @@ def get_customer(customer_id):
     if customer:
         return jsonify(customer)
     return jsonify({"error": "Customer not found"}), 404
+
+
 # --------------------------------------------------
 # ADMIN UI — CREATE SHIPMENT FROM PDF LABEL
-# Add these routes to app_manager.py
 # --------------------------------------------------
 
-@app.route("/admin-ui/create-shipment-from-pdf", methods=["GET"])
-def admin_ui_create_shipment_from_pdf():
-    conn = get_db_connection()
-    cur  = conn.cursor(dictionary=True)
-    cur.execute(
-        """SELECT application_id, application_name FROM applications
-           WHERE is_active = TRUE
-           ORDER BY FIELD(application_name, 'DeliveryHub') DESC, application_name"""
-    )
-    applications = cur.fetchall()
-    cur.close()
-    conn.close()
-    return render_template("create_shipment_from_pdf.html", applications=applications)
 
 
 @app.route("/admin-ui/extract-label", methods=["POST"])
-def admin_ui_extract_label():
-    """
-    Accepts a PDF upload, runs pdf_extractor, returns JSON of extracted fields.
-    The frontend then pre-fills the shipment form with the result.
-    """
-    from pdf_extractor import extract_label_fields
+def extract_label():
+    if "label_pdf" not in request.files:
+        return jsonify({"status": "error", "reason": "No file uploaded"}), 400
 
-    label_file = request.files.get("label_pdf")
-
-    if not label_file:
-        return jsonify({"status": "error", "reason": "No PDF file received"}), 400
-
-    if not label_file.filename.lower().endswith(".pdf"):
-        return jsonify({"status": "error", "reason": "Only PDF files are accepted"}), 400
-
-    # Save to a temp location for extraction
-    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
-    temp_filename = secure_filename(label_file.filename)
-    temp_path     = os.path.join(app.config["UPLOAD_FOLDER"], "tmp_" + temp_filename)
-    label_file.save(temp_path)
+    file = request.files["label_pdf"]
 
     try:
-        fields = extract_label_fields(temp_path)
-        return jsonify({"status": "success", "fields": fields}), 200
+        with pdfplumber.open(file) as pdf:
+            text = "\n".join(page.extract_text() or "" for page in pdf.pages)
     except Exception as e:
-        return jsonify({"status": "error", "reason": str(e)}), 500
-    finally:
-        # Clean up temp file
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
+        return jsonify({"status": "error", "reason": f"Could not parse PDF: {e}"}), 400
+
+    if not text.strip():
+        return jsonify({"status": "error", "reason": "No extractable text found in PDF"}), 400
+
+    fields = extract_fedex_fields(text)
+
+    return jsonify({"status": "success", "fields": fields})
+
+
+def extract_tracking_number(text):
+    """
+    Robustly find a FedEx tracking number in extracted PDF text.
+    Handles 12, 14, and 15-digit FedEx tracking numbers, with or without
+    spaces, and works whether or not a "Tracking Number:" / "TRK#" label
+    is present nearby. Returns None if nothing plausible is found —
+    callers must treat that as "not available" and never fail on it.
+    """
+    if not text:
+        return None
+
+    # 1) Highest confidence: explicit "Tracking Number:" or "TRK#" label
+    #    followed by a run of digits/spaces.
+    labeled_match = re.search(
+        r"(?:Tracking\s*Number|TRK#?)\s*[:\-]?\s*([\d\s]{10,20})",
+        text,
+        re.IGNORECASE
+    )
+    if labeled_match:
+        candidate = re.sub(r"\s+", "", labeled_match.group(1))
+        if 12 <= len(candidate) <= 15:
+            return candidate
+
+    # 2) Fallback: bare 4-4-4 grouped 12-digit number (common FedEx Express format)
+    grouped_match = re.search(r"\b(\d{4}\s\d{4}\s\d{4})\b", text)
+    if grouped_match:
+        return grouped_match.group(1).replace(" ", "")
+
+    # 3) Fallback: bare contiguous 15, 14, then 12-digit sequences
+    for length in (15, 14, 12):
+        bare_match = re.search(r"(?<!\d)(\d{%d})(?!\d)" % length, text)
+        if bare_match:
+            return bare_match.group(1)
+
+    return None
+
+
+def extract_fedex_fields(text: str) -> dict:
+    fields = {}
+
+    # Tracking number — now uses the shared, more robust extractor
+    fields["tracking_number"] = extract_tracking_number(text)
+
+    # Reference number
+    ref_match = re.search(r"REF[:\s]+(\S+)", text, re.IGNORECASE)
+    fields["reference"] = ref_match.group(1) if ref_match else None
+
+    # Ship date
+    date_match = re.search(r"SHIP DATE[:\s]+([0-9]{1,2}[A-Z]{3}[0-9]{2})", text, re.IGNORECASE)
+    fields["ship_date"] = date_match.group(1) if date_match else None
+
+    # --- Sender (FROM / ORIGIN side) ---
+    origin_phone = re.search(r"\((\d{3})\)\s?(\d{3})-(\d{4})", text)
+    fields["from_phone"] = "".join(origin_phone.groups()) if origin_phone else None
+
+    origin_zip = re.search(r"([A-Z]{2}\s?\d{5})\s+US", text)
+    if origin_zip:
+        fields["from_zip"] = re.search(r"\d{5}", origin_zip.group(1)).group(0)
+        fields["from_state"] = re.search(r"[A-Z]{2}", origin_zip.group(1)).group(0)
+
+    # --- Receiver (TO side) — adjust based on your label layout ---
+    to_name_match = re.search(r"TO\s+([A-Z\s]+?)\n", text)
+    fields["to_name"] = to_name_match.group(1).strip() if to_name_match else None
+
+    # Add more parsing rules here as you encounter more label variants
+    fields["service"] = "US_TO_INDIA_PARCEL_EXPRESS"  # default/fallback, refine based on label text
+
+    return fields
+
+
 @app.route("/admin-ui/create-shipment-from-text", methods=["GET", "POST"])
 def create_shipment_from_text():
 
     if request.method == "GET":
         return render_template("create_shipment_from_text.html")
-
-    import re
 
     shipment_text = request.form.get("shipment_text")
     service = request.form.get("service", "Express International")
@@ -1059,6 +1152,18 @@ def create_shipment_from_text():
 
     except Exception as e:
         return f"Could not create shipment from text: {str(e)}", 500
+
+def extract_tracking_number_from_pdf(file_path):
+    with pdfplumber.open(file_path) as pdf:
+        text = "\n".join(page.extract_text() or "" for page in pdf.pages)
+
+    # Prefer number before "IP EOD" in FedEx label
+    match = re.search(r"\b(\d{4}\s+\d{4}\s+\d{4})\s+IP\s+EOD\b", text)
+
+    if match:
+        return match.group(1).replace(" ", "")
+
+    return None
 # --------------------------------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True, port=5001)
