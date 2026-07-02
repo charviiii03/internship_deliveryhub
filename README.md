@@ -1,884 +1,210 @@
-# DeliveryHub API
+# 📦 DeliveryHub API
+
+> **Flask-based Shipment Validation & Admin Management Platform**
+
+![Python](https://img.shields.io/badge/Python-3.10+-blue)
+![Flask](https://img.shields.io/badge/Flask-Web%20API-black)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-orange)
+![Docker](https://img.shields.io/badge/Docker-Containerized-blue)
+![Pytest](https://img.shields.io/badge/Tested%20with-Pytest-yellow)
+![License](https://img.shields.io/badge/License-Educational-green)
+![Status](https://img.shields.io/badge/Status-Active-success)
+
+A secure, containerized backend service for validating shipments,
+authenticating client applications, and managing shipment operations
+through a full-featured Admin Portal.
+
+------------------------------------------------------------------------
+
+## 📑 Table of Contents
+
+- [Overview](#overview)
+- [Key Highlights](#key-highlights)
+- [Features](#features)
+- [What I Built](#what-i-built)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Database Setup](#database-setup)
+  - [Environment Configuration](#environment-configuration)
+  - [Running the Application](#running-the-application)
+- [API Reference](#api-reference)
+- [Authentication System](#authentication-system)
+- [Admin Portal](#admin-portal)
+- [Shipment Label Workflow](#shipment-label-workflow)
+- [Notification Service](#notification-service)
+- [Authentication Logs](#authentication-logs)
+- [Docker Deployment](#docker-deployment)
+- [Database Schema](#database-schema)
+- [Testing](#testing)
+- [Security Features](#security-features)
+- [Security Considerations](#security-considerations)
+- [Error Handling & Status Codes](#error-handling--status-codes)
+- [Project Structure](#project-structure)
+- [Challenges Faced](#challenges-faced)
+- [Learning Outcomes](#learning-outcomes)
+- [Roadmap / Future Improvements](#roadmap--future-improvements)
+- [Contributing](#contributing)
+- [FAQ](#faq)
+- [License](#license)
+- [Contact](#contact)
+
+------------------------------------------------------------------------
 
 ## Overview
 
-DeliveryHub is a Flask-based microservice that validates shipment requests and manages third-party application access through secure authentication and authorization mechanisms.
+**DeliveryHub** is a Flask-based backend microservice and Admin
+Management Portal that validates shipment requests, authenticates
+third-party client applications, manages shipment labels, and gives
+administrators a centralized dashboard for monitoring platform
+activity.
 
-The project includes:
+The system integrates **Flask, MySQL (MariaDB compatible), Docker,
+email notifications, and Pytest** to deliver a secure, scalable
+shipment management platform suitable for real-world logistics use
+cases.
 
-- Input validation APIs
-- Shipment label request processing
-- MariaDB database integration
-- Application authentication
-- Admin management APIs
-- Authentication logging
-- Automated testing using Pytest
+------------------------------------------------------------------------
 
----
+## Key Highlights
+
+| | |
+|---|---|
+| 🔐 **Secure by default** | Hashed tokens, audit logging, admin-only routes |
+| 🐳 **Fully containerized** | One command spins up API + DB via Docker Compose |
+| 📬 **Automated notifications** | Credentials & shipment updates emailed automatically |
+| 🧪 **Test-covered** | Pytest suite across dev/test/prod environments |
+| 🗂️ **Multi-environment ready** | Isolated `dev`, `test`, and `prod` databases |
+| 📊 **Admin dashboard** | Manage applications, shipments, labels, and logs from one UI |
+
+------------------------------------------------------------------------
 
 ## Features
 
-- Text validation API
-- Shipment label generation API
-- MariaDB database integration
-- Application-based authentication
-- Secure token hashing
-- Application expiry validation
-- Admin application onboarding
-- Application status management
-- Authentication logging
-- Multi-environment database support
-- Automated testing using Pytest
-- Database setup automation
-- Error handling and validation
-- Email notification service
-- Automated credential delivery
-- Environment variable configuration
+- Shipment validation API
+- Shipment label generation & replacement
+- Third-party application authentication
+- Secure token hashing (Werkzeug)
+- Application onboarding with auto-generated credentials
+- Authentication attempt logging (success/failure + IP)
+- Docker & Docker Compose deployment
+- Multi-environment database support (dev/test/prod)
+- Automated testing with Pytest
+- Email notification service (Flask-Mail)
+- Admin dashboard with shipment & application management
+- Label upload with PDF validation
+- Environment-variable-based configuration
+- One-command database setup automation
 
----
+------------------------------------------------------------------------
 
-## Project Architecture
+## What I Built
 
-```text
-Client
-   |
-   v
-Flask API Service
-   |
-   +-------> Notification Service
-   |
-   v
-MariaDB Database
-```
+- REST APIs for shipment validation
+- Secure application authentication layer
+- Admin portal for day-to-day operational management
+- Shipment creation and label lifecycle management
+- Authentication monitoring dashboard with filters
+- Email notification service for credentials & shipment updates
+- Dockerized deployment for consistent environments
+- MySQL-backed persistence layer with normalized schema
+- Automated testing support with sample seed data
 
-### Communication Flow
+------------------------------------------------------------------------
+
+## Architecture
 
 ```text
-Client ---> Flask API
-
-Flask API ---> Validation Logic
-
-Flask API ---> MariaDB
-
-MariaDB ---> Flask API
-
-Flask API ---> JSON Response
-
-Flask API ---> Client
+                 Client Applications
+                         |
+                         v
+                Flask API / Admin Portal
+                   |              |
+                   |              +------> Notification Service (Flask-Mail)
+                   |
+                   v
+               MySQL Database
+              (dev / test / prod)
 ```
 
----
+**Request flow example — Shipment Validation:**
 
-## Installation
+```text
+Client App --(application_id + token)--> /api/validate
+                                             |
+                                    Verify token hash
+                                             |
+                                  Check active/expired status
+                                             |
+                                    Log attempt (success/fail)
+                                             |
+                              Return validation result (JSON)
+```
 
-### Clone Repository
+------------------------------------------------------------------------
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Language | Python 3.10+ |
+| Framework | Flask |
+| Database | MySQL / MariaDB |
+| ORM / Access | SQL (via `db.py`) |
+| Templating | Jinja2 + Bootstrap |
+| Email | Flask-Mail |
+| Testing | Pytest |
+| Deployment | Docker & Docker Compose |
+| Auth | Werkzeug password/token hashing |
+
+------------------------------------------------------------------------
+
+## Getting Started
+
+### Prerequisites
+
+Make sure you have the following installed before you begin:
+
+- Python **3.10+**
+- pip (Python package manager)
+- Docker & Docker Compose (recommended for easiest setup)
+- MySQL 8.0+ / MariaDB (if running without Docker)
+- A Gmail (or SMTP) account for the notification service
+
+### Installation
 
 ```bash
-git clone https://github.com/your-username/internship_deliveryhub.git
-
+git clone https://github.com/<your-username>/internship_deliveryhub.git
 cd internship_deliveryhub
-```
 
-### Install Dependencies
+python -m venv venv
+source venv/bin/activate    # On Windows: venv\Scripts\activate
 
-```bash
 pip install -r requirements.txt
 ```
 
----
-
-## Database Setup
-
-Run:
+### Database Setup
 
 ```bash
 ./setup_db.sh
 ```
 
-This script:
+This script creates:
 
-- Creates development database
-- Creates test database
-- Creates production database
-- Creates required tables
-- Loads sample test data
+- `deliveryhub_dev`
+- `deliveryhub_test`
+- `deliveryhub_prod`
 
----
+along with all required tables and sample seed data.
 
-## Environment Configuration
+> 💡 **Tip:** Re-run `setup_db.sh --reset` (if implemented) to wipe and
+> rebuild tables during development.
 
-The application supports multiple environments.
+### Environment Configuration
 
-```bash
-APP_ENV=dev
-APP_ENV=test
-APP_ENV=production
-```
-
-Supported Databases:
-
-| Environment | Database |
-|------------|----------|
-| Development | deliveryhub_dev |
-| Testing | deliveryhub_test |
-| Production | deliveryhub_prod |
-
----
-
-## Running the Application
-
-Start Flask server:
-
-```bash
-python app.py
-```
-
-Server runs at:
-
-```text
-http://127.0.0.1:5000
-```
-
----
-
-# API Endpoints
-
-## Validate Text
-
-### Endpoint
-
-```http
-POST /validate
-```
-
-### Request
-
-```json
-{
-    "text": "Hello123"
-}
-```
-
-### Success Response
-
-```json
-{
-    "status": "valid"
-}
-```
-
-### Invalid Response
-
-```json
-{
-    "status": "invalid",
-    "reason": "Special characters found"
-}
-```
-
----
-
-## Generate Shipment Label
-
-### Endpoint
-
-```http
-POST /generate-label
-```
-
-### Required Fields
-
-```json
-{
-    "from_name": "Sender Name",
-    "from_address": "Sender Address",
-    "from_phone": "1234567890",
-    "to_name": "Receiver Name",
-    "to_address": "Receiver Address",
-    "to_phone": "0987654321",
-    "service": "FedEx Envelope International Priority"
-}
-```
-
-### Success Response
-
-```json
-{
-    "status": "valid"
-}
-```
-
-### Invalid Response
-
-```json
-{
-    "status": "invalid",
-    "reason": "Required field missing"
-}
-```
-
----
-
-# Authentication System
-
-Every application must authenticate before accessing protected APIs.
-
-Authentication uses:
-
-- application_id
-- application_token
-
-Similar to a username/password system.
-
----
-
-## Applications Table
-
-Stores:
-
-| Column | Description |
-|----------|-------------|
-| application_id | Unique application identifier |
-| application_token | Hashed application token |
-| application_name | Name of application |
-| user_email | Owner email |
-| expiry_date | Expiry date |
-| is_active | Active/Inactive status |
-
----
-
-## Secure Token Storage
-
-Application tokens are never stored in plain text.
-
-Tokens are hashed using:
-
-```python
-generate_password_hash()
-```
-
-Verification uses:
-
-```python
-check_password_hash()
-```
-
-This prevents token exposure even if the database is compromised.
-
----
-
-## Sign In
-
-### Endpoint
-
-```http
-POST /signin
-```
-
-### Request
-
-```json
-{
-    "application_id": "your_application_id",
-    "application_token": "your_application_token"
-}
-```
-
-### Success Response
-
-```json
-{
-    "status": "valid",
-    "message": "signin successful"
-}
-```
-
-### Failure Response
-
-```json
-{
-    "status": "invalid",
-    "reason": "invalid token"
-}
-```
-
----
-
-## Expiry Validation
-
-Applications are valid only when:
-
-```text
-expiry_date >= current_date
-```
-
-Expired applications automatically fail authentication.
-
----
-
-# Admin APIs
-
-## Create Application
-
-### Endpoint
-
-```http
-POST /admin/create-application
-```
-
-### Purpose
-
-- Create new application
-- Generate application ID
-- Generate secure token
-- Set default expiry period
-- Store application details
-
-Generated using:
-
-```python
-uuid.uuid4()
-secrets.token_urlsafe()
-```
-
----
-
-## View Applications
-
-### Endpoint
-
-```http
-GET /admin/applications
-```
-
-### Returns
-
-- application_id
-- application_name
-- user_email
-- expiry_date
-- is_active
-
-Example Response:
-
-```json
-{
-    "status": "success",
-    "applications": [...]
-}
-```
-
----
-
-## Update Expiry Date
-
-### Endpoint
-
-```http
-PUT /admin/update-expiry
-```
-
-### Purpose
-
-- Extend validity
-- Renew applications
-- Modify expiry dates
-
----
-
-## Update Application Status
-
-### Endpoint
-
-```http
-PUT /admin/update-status
-```
-
-### Purpose
-
-- Activate application
-- Deactivate application
-
-Authentication fails when:
-
-```text
-is_active = false
-```
-
-even if credentials are correct.
-
----
----
-
-# Notification Service
-
-## Purpose
-
-Automatically notify application owners when a new application is created through the App Manager system.
-
-The notification service sends application credentials to the registered email address after successful application creation.
-
----
-
-## Trigger Event
-
-### Endpoint
-
-```http
-POST /admin/create-application
-```
-
-### Notification Flow
-
-```text
-Admin
-   |
-   v
-Create Application
-   |
-   v
-Generate Application ID
-   |
-   v
-Generate Application Token
-   |
-   v
-Store Application Details
-   |
-   v
-Send Email Notification
-   |
-   v
-Application Owner
-```
-
----
-
-## Email Contents
-
-The notification email contains:
-
-- Application ID
-- Application Token
-- Expiry Date
-
-Example:
-
-```text
-Application ID:
-03e27fea-a515-4319-b0b1-f1ef4482453c
-
-Application Token:
-xxxxxxxxxxxxxxxxxxxxxxxx
-
-Expiry Date:
-2026-08-30
-```
-
----
-
-## Notification Module
-
-Notification functionality is implemented in a dedicated module:
-
-```text
-notifications.py
-```
-
-This module is responsible for:
-
-- Building email messages
-- Sending application credentials
-- Managing email delivery operations
-
----
-
-## Email Configuration
-
-SMTP settings are configured through environment variables.
-
-```env
-MAIL_USERNAME=<sender_email>
-MAIL_PASSWORD=<app_password>
-```
-
-Benefits:
-
-- Improved security
-- Credentials not stored in source code
-- Easier deployment across environments
-
----
-
-## Libraries Used
-
-```text
-Flask-Mail
-python-dotenv
-```
-
----
-
-## Future Notification Enhancements
-
-Planned improvements:
-
-- WhatsApp notifications
-- Shipment request notifications
-- Application expiry reminders
-- Notification retry mechanism
-- Admin alert notifications
-
----
-
-# Authentication Logs
-
-Authentication events are stored in:
-
-```text
-authentication_logs
-```
-
-Stored Information:
-
-| Field | Description |
-|---------|-------------|
-| application_id | Application making request |
-| request_time | Authentication timestamp |
-| status | Success / Failure |
-| reason | Failure reason |
-| ip_address | Request IP |
-
-Purpose:
-
-- Security monitoring
-- Audit trails
-- Failed login tracking
-- Troubleshooting
-
----
-
-# Automated Testing
-
-## Run Tests
-
-Stop Flask server first:
-
-```bash
-CTRL + C
-```
-
-Run tests:
-
-```bash
-pytest
-```
-
----
-
-## Test Cases
-
-### Valid Input
-
-```json
-{
-    "text": "Hello123"
-}
-```
-
-Expected:
-
-```json
-{
-    "status": "valid"
-}
-```
-
----
-
-### Invalid Input
-
-```json
-{
-    "text": "Hello@123"
-}
-```
-
-Expected:
-
-```json
-{
-    "status": "invalid"
-}
-```
-
----
-
-# Error Handling
-
-Database operations include exception handling.
-
-Example:
-
-```python
-try:
-    connection = get_db_connection()
-except Exception as e:
-    print(e)
-```
-
-Benefits:
-
-- Prevents crashes
-- Improves reliability
-- Provides meaningful error messages
-
----
-# DeliveryHub – Admin Management Portal
-
-## Overview
-
-The Admin Management Portal is a web-based administration console developed for managing applications, authentication logs, shipment requests, shipment labels, and overall system monitoring.
-
-The portal provides administrators with a centralized dashboard to monitor platform activity, onboard applications, track shipments, and manage authentication access.
-
----
-
-# Admin Dashboard
-
-The Admin Dashboard provides a centralized view of the entire system.
-
-### Features
-
-- Total Applications
-- Valid Authentication Requests
-- Invalid Authentication Requests
-- Total Shipments
-- Recent Activity Feed
-- Quick Actions Navigation
-- Shipment Summary Statistics
-
-### Access
-
-```text
-http://localhost:5001/admin-ui
-```
-
----
-
-# Admin UI Features
-
-## 1. Applications Management
-
-### Endpoint
-
-```text
-/admin-ui/applications
-```
-
-### Capabilities
-
-- View all registered applications
-- Search applications
-- View application status
-- Monitor expiry dates
-- Create new applications
-
----
-
-## 2. Authentication Logs
-
-### Endpoint
-
-```text
-/admin-ui/auth-logs
-```
-
-### Capabilities
-
-- View authentication attempts
-- Monitor successful logins
-- Monitor failed logins
-- Audit application access
-- View source IP addresses
-
----
-
-## 3. Shipment Management
-
-### Endpoint
-
-```text
-/ admin-ui/shipments
-```
-
-### Capabilities
-
-- View shipment requests
-- Monitor shipment status
-- Track shipment lifecycle
-- View sender and receiver information
-- View shipment validation results
-
----
-
-## 4. Create Shipment
-
-### Endpoint
-
-```text
-/admin-ui/create-shipment
-```
-
-### Capabilities
-
-- Create shipment requests directly from Admin UI
-- Validate sender information
-- Validate receiver information
-- Support India and USA shipment rules
-- Automatically create shipment tracking records
-
-### Validation Rules
-
-#### India
-
-| Field | Validation |
-|---------|------------|
-| Country Code | IN |
-| Phone Code | +91 |
-| Phone Length | 10 Digits |
-| Postal Code | 6 Digits |
-
-#### USA
-
-| Field | Validation |
-|---------|------------|
-| Country Code | US |
-| Phone Code | +1 |
-| Phone Length | 10 Digits |
-| Postal Code | 5 Digits |
-
----
-
-## 5. Upload Label
-
-### Endpoint
-
-```text
-/admin-ui/upload-label
-```
-
-### Capabilities
-
-- Upload shipment labels
-- Store uploaded label files
-- Associate labels with shipment requests
-
----
-
-# Docker Deployment
-
-The project is fully containerized using Docker and Docker Compose.
-
----
-
-## Services
-
-### App Manager
-
-**Container**
-
-```text
-deliveryhub_app_manager
-```
-
-### Responsibilities
-
-- Flask API
-- Admin Portal
-- Application Management
-- Shipment Processing
-- Notification Service
-
----
-
-### Database
-
-**Container**
-
-```text
-deliveryhub_db
-```
-
-**Image**
-
-```text
-mysql:8.0
-```
-
-### Responsibilities
-
-- Store applications
-- Store shipments
-- Store authentication logs
-- Store shipment tracking information
-
----
-
-# Docker Architecture
-
-```text
-+----------------------+
-|    Admin Portal      |
-|     Flask API        |
-+----------+-----------+
-           |
-           v
-+----------------------+
-|    MySQL Database    |
-|   deliveryhub_dev    |
-+----------------------+
-```
-
----
-
-# Running with Docker
-
-## Build Containers
-
-```bash
-docker compose up --build
-```
-
-## Run in Background
-
-```bash
-docker compose up -d
-```
-
-## Stop Containers
-
-```bash
-docker compose down
-```
-
-## View Running Containers
-
-```bash
-docker ps
-```
-
-## View Logs
-
-```bash
-docker compose logs -f
-```
-
----
-
-# Docker Environment Variables
-
-Example:
+Create a `.env` file in the project root:
 
 ```env
 APP_ENV=dev
@@ -890,202 +216,376 @@ DB_NAME=deliveryhub_dev
 
 MAIL_USERNAME=your_email@gmail.com
 MAIL_PASSWORD=your_app_password
+
+SECRET_KEY=change_this_to_a_random_secret
+TOKEN_EXPIRY_DAYS=30
 ```
 
----
+> ⚠️ **Never commit your `.env` file.** Add it to `.gitignore` and use
+> `.env.example` as a template for collaborators.
 
-# Project Structure
+### Running the Application
+
+**Locally:**
+
+```bash
+python app.py
+```
+
+**With Docker (recommended):**
+
+```bash
+docker compose up --build
+```
+
+The API will be available at `http://localhost:5000` and the Admin
+Portal at `http://localhost:5000/admin` (adjust to your actual routes).
+
+------------------------------------------------------------------------
+
+## API Reference
+
+> Replace endpoint paths below with your actual route names if they differ.
+
+| Method | Endpoint | Description | Auth Required |
+|---|---|---|---|
+| `POST` | `/api/applications` | Register a new client application | Admin |
+| `POST` | `/api/validate` | Validate `application_id` + `application_token` | No |
+| `POST` | `/api/shipments` | Create a new shipment | App Token |
+| `GET` | `/api/shipments/<id>` | Retrieve shipment details | App Token |
+| `POST` | `/api/shipments/<id>/label` | Upload/replace a shipment label (PDF) | Admin |
+| `GET` | `/api/shipments/<id>/label` | Download the current shipment label | App Token |
+| `GET` | `/api/logs` | View authentication logs | Admin |
+
+**Example — Validate Application**
+
+```bash
+curl -X POST http://localhost:5000/api/validate \
+  -H "Content-Type: application/json" \
+  -d '{"application_id": "APP123", "application_token": "your_token"}'
+```
+
+**Example Response:**
+
+```json
+{
+  "status": "success",
+  "message": "Application authenticated successfully",
+  "expires_at": "2026-12-01T00:00:00Z"
+}
+```
+
+------------------------------------------------------------------------
+
+## Authentication System
+
+Every client application authenticates using:
+
+- `application_id`
+- `application_token`
+
+**How it works:**
+
+1. Tokens are hashed using **Werkzeug** password hashing before storage — plaintext tokens are never persisted.
+2. On each request, the incoming token is verified against the stored hash.
+3. Expired or inactive applications are automatically rejected.
+4. Every attempt (success or failure) is written to the authentication log with a timestamp and IP address.
+
+------------------------------------------------------------------------
+
+## Admin Portal
+
+The Admin UI provides:
+
+- 📊 Dashboard (overview of applications, shipments, and activity)
+- 🗂️ Applications management (create, activate/deactivate, revoke)
+- 📜 Authentication Logs (filter by app, status, date)
+- 🚚 Shipment Management
+- ➕ Shipment Creation
+- 📎 Shipment Label Upload
+- 🧾 Invoice Generator
+
+------------------------------------------------------------------------
+
+## Shipment Label Workflow
 
 ```text
-internship_deliveryhub
-│
-├── app_manager.py
-├── db.py
-├── notifications.py
-├── Dockerfile
-├── docker-compose.yml
-├── requirements.txt
-│
-├── sql
-│   ├── schema.sql
-│   └── seed_test.sql
-│
-├── templates
-│   ├── admin_dashboard.html
-│   ├── applications.html
-│   ├── auth_logs.html
-│   ├── shipments.html
-│   ├── create_application.html
-│   ├── create_shipment.html
-│   └── upload_label.html
-│
-├── static
-│   └── logo.jpeg
-│
-├── uploads
-│
-└── tests
-    ├── test_app.py
-    └── test_integration.py
+Shipment Created
+        |
+        v
+Admin Uploads PDF
+        |
+        v
+Label Saved (secure filename)
+        |
+        v
+Shipment Record Updated
+        |
+        v
+Email Sent to Receiver
 ```
 
----
+**Features:**
 
-# Database Schema
+- PDF-only uploads with server-side validation
+- Automatic shipment association
+- View uploaded labels
+- Replace existing labels without breaking history
+- Receiver email lookup
+- Label status tracking (pending / uploaded / sent)
 
-## customers
+------------------------------------------------------------------------
 
-Stores sender and receiver details.
+## Notification Service
 
-### Fields
+Automatically emails newly generated application credentials to the
+registered address upon application creation, and notifies receivers
+when a shipment label is issued.
 
-- customer_id
-- full_name
-- phone_number
-- email
+**Application creation email includes:**
 
----
+- Application ID
+- Application Token
+- Expiry Date
 
-## addresses
+**Shipment label email includes:**
 
-Stores shipment address information.
+- Shipment ID / Tracking Number
+- Label download link
+- Estimated delivery info (if available)
 
-### Fields
+------------------------------------------------------------------------
 
-- address_id
-- address_line1
-- address_line2
-- city
-- state_name
-- country
-- country_code
-- postal_code
+## Authentication Logs
 
----
+Every authentication request stores:
 
-## shipments
+| Field | Description |
+|---|---|
+| Application ID | Which app attempted authentication |
+| Status | Success / Failure |
+| Failure Reason | Invalid token, expired, inactive, etc. |
+| Timestamp | When the attempt occurred |
+| IP Address | Origin of the request |
 
-Stores shipment requests.
+Useful for **auditing, anomaly detection, and security monitoring**.
 
-### Fields
+------------------------------------------------------------------------
 
-- shipment_id
-- requestid
-- sender_customer_id
-- receiver_customer_id
-- from_address_id
-- to_address_id
-- service
-- validation_status
-- validation_reason
-- state
-- return_code
-- return_json
+## Docker Deployment
 
----
+```bash
+# Build and start containers
+docker compose up --build
 
-## shipment_tracking
+# Start in detached mode
+docker compose up -d
 
-Stores shipment tracking updates.
+# Stop and remove containers
+docker compose down
 
-### Fields
+# View running containers
+docker ps
 
-- tracking_id
-- shipment_id
-- current_status
-- updated_time
+# Tail logs
+docker compose logs -f
+```
 
----
+------------------------------------------------------------------------
 
-## applications
+## Database Schema
 
-Stores onboarded client applications.
+Core tables:
 
-### Fields
+- `customers`
+- `addresses`
+- `shipments`
+- `shipment_tracking`
+- `shipment_labels`
+- `applications`
+- `authentication_logs`
 
-- application_id
-- application_token
-- application_name
-- user_email
-- expiry_date
-- is_active
-- created_at
+**Simplified ER overview:**
 
----
+```text
+customers ──< addresses
+customers ──< shipments ──< shipment_tracking
+shipments ──< shipment_labels
+applications ──< authentication_logs
+```
 
-## authentication_logs
+------------------------------------------------------------------------
 
-Stores application authentication activity.
+## Testing
 
-### Fields
+Run the automated test suite with Pytest:
 
-- application_id
-- request_time
-- status
-- reason
-- ip_address
+```bash
+pytest -v
+```
 
----
+Run against a specific environment:
 
-# Security Features
+```bash
+APP_ENV=test pytest -v
+```
 
-The following security mechanisms have been implemented:
+Generate a coverage report (if `pytest-cov` is installed):
 
-- Application Authentication
-- Token Hashing
-- Password Hashing
-- Expiry Validation
-- Active/Inactive Controls
-- Authentication Logging
-- Input Validation
-- Email-Based Credential Delivery
-- Environment Variable Configuration
-- Docker Container Isolation
+```bash
+pytest --cov=. --cov-report=term-missing
+```
 
----
+------------------------------------------------------------------------
 
-# Future Improvements
+## Security Features
 
-Planned enhancements for future releases:
+- Password & token hashing (Werkzeug)
+- Token expiry validation
+- Active/inactive application controls
+- Server-side input validation
+- Full authentication audit trail
+- Environment-variable-based secrets
+- Docker container isolation
 
-- JWT Authentication
-- Role-Based Access Control (RBAC)
-- HTTPS with Nginx
-- Rate Limiting
-- Shipment Status Workflow Automation
-- Advanced Dashboard Analytics
-- WhatsApp Notifications
-- Application Expiry Reminders
-- Production Monitoring
-- Kubernetes Deployment
+------------------------------------------------------------------------
 
----
+## Security Considerations
 
-# Key Technologies
+- No plaintext token storage — ever
+- SMTP credentials stored only in environment variables
+- Admin-only management operations, gated by role checks
+- Secure filename generation for uploaded labels
+- Full authentication audit trail for forensic review
+- Containerized deployment to limit blast radius
+- Recommended: enable HTTPS in production (see Roadmap)
 
-- Python
-- Flask
-- MySQL 8.0
-- Docker
-- Docker Compose
-- HTML
-- Bootstrap
-- Jinja2 Templates
-- SMTP Email Service
-- Pytest
+------------------------------------------------------------------------
 
----
+## Error Handling & Status Codes
 
-# Summary
+| Code | Meaning |
+|---|---|
+| `200` | Request successful |
+| `201` | Resource created |
+| `400` | Invalid request payload |
+| `401` | Invalid or missing credentials |
+| `403` | Authenticated but not authorized |
+| `404` | Resource not found |
+| `409` | Conflict (e.g., duplicate application) |
+| `422` | Validation error (e.g., non-PDF upload) |
+| `500` | Internal server error |
 
-DeliveryHub Admin Management Portal provides a complete administrative interface for:
+------------------------------------------------------------------------
 
-- Application Onboarding
-- Authentication Monitoring
-- Shipment Creation & Tracking
-- Shipment Label Management
-- Email Notification Services
-- Secure Application Access Control
+## Project Structure
 
-The system is fully containerized using Docker, integrated with MySQL, secured through token-based authentication mechanisms, and designed for future scalability through Kubernetes and production-grade monitoring solutions.
+```text
+internship_deliveryhub/
+│
+├── app_manager.py        # Core Flask app & route registration
+├── db.py                 # Database connection & query helpers
+├── notifications.py      # Email notification logic
+├── Dockerfile             
+├── docker-compose.yml     
+├── requirements.txt
+├── setup_db.sh            # Database bootstrap script
+├── .env.example            
+├── templates/             # Jinja2 templates for Admin Portal
+├── uploads/                # Uploaded shipment labels
+├── tests/                  # Pytest test suite
+└── README.md
+```
 
+------------------------------------------------------------------------
+
+## Challenges Faced
+
+- Designing a normalized MySQL schema for shipments, labels, and auth logs
+- Implementing secure, hash-based authentication end to end
+- Supporting multiple isolated environments (dev/test/prod)
+- Docker/Compose networking between the app and database
+- Building a reliable email notification workflow
+- Managing the full shipment label lifecycle (upload → replace → track)
+- Building a usable Admin UI on top of Flask + Jinja2
+- Debugging intermittent API/database interaction issues
+
+------------------------------------------------------------------------
+
+## Learning Outcomes
+
+This project strengthened my understanding of:
+
+- Flask application design & REST API development
+- Relational database modeling in SQL
+- Authentication & authorization patterns
+- Docker & Docker Compose for reproducible environments
+- Email integration in backend systems
+- Backend debugging and root-cause analysis
+- Admin dashboard / internal tooling development
+- Secure software development practices
+
+------------------------------------------------------------------------
+
+## Roadmap / Future Improvements
+
+- [ ] JWT-based authentication
+- [ ] Role-Based Access Control (RBAC)
+- [ ] HTTPS + Nginx reverse proxy
+- [ ] API rate limiting
+- [ ] Shipment tracking timeline (live status updates)
+- [ ] Analytics dashboard with charts
+- [ ] WhatsApp notification channel
+- [ ] Kubernetes deployment manifests
+- [ ] OpenAPI / Swagger documentation
+- [ ] CI/CD pipeline (GitHub Actions)
+
+------------------------------------------------------------------------
+
+## Contributing
+
+Contributions, issues, and feature requests are welcome!
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m "Add your feature"`
+4. Push to the branch: `git push origin feature/your-feature`
+5. Open a Pull Request
+
+Please make sure tests pass (`pytest -v`) before submitting a PR.
+
+------------------------------------------------------------------------
+
+## FAQ
+
+**Q: Can I use PostgreSQL instead of MySQL?**
+A: Not out of the box — the queries in `db.py` target MySQL/MariaDB syntax. Migrating would require adapting the data-access layer.
+
+**Q: How do I reset a forgotten admin password?**
+A: Update the corresponding record directly in the `applications`/admin table, or re-run the seed script if in a dev environment.
+
+**Q: Why was my label upload rejected?**
+A: Only PDF files are accepted for shipment labels; other formats return a `422` validation error.
+
+------------------------------------------------------------------------
+
+## License
+
+This project is intended for **educational, internship, and portfolio
+purposes**.
+
+------------------------------------------------------------------------
+
+## Contact
+
+For questions, suggestions, or collaboration opportunities, feel free
+to open an issue or reach out via GitHub.
+
+------------------------------------------------------------------------
+
+**DeliveryHub** — a production-style backend project demonstrating
+secure application onboarding, shipment validation, authentication,
+shipment label management, email notifications, Docker deployment,
+and a modern Flask-based Admin Management Portal. It showcases backend
+engineering, database design, authentication, containerization, and
+full-stack administrative workflows in a single project.
