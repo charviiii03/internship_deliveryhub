@@ -1,10 +1,9 @@
--- =============================================================
+-- ============================================================
 -- DeliveryHub Seed Data (Test)
--- Fixed: address_line → address_line1, added email to customers,
---        added DeliveryHub default application entry
--- =============================================================
+-- Matches fixed schema.sql
+-- ============================================================
 
--- Default DeliveryHub application (always present as the system default)
+-- Default DeliveryHub application (system default)
 INSERT IGNORE INTO applications
     (application_id, application_token, application_name, user_email, expiry_date)
 VALUES
@@ -17,22 +16,17 @@ VALUES
     ('app123', 'token123', 'test_client', 'testclient@example.com', '2026-12-31');
 
 
--- Customers (email column is required - NOT NULL UNIQUE in schema)
+-- Customers (email column now exists)
 INSERT IGNORE INTO customers (full_name, phone_number, email)
 VALUES
     ('John Smith',  '+1 2097390823', 'johnsmith@example.com'),
     ('Rahul Kumar', '+91 8888888888', 'rahul@example.com');
 
 
--- Addresses (use address_line1, not address_line)
+-- Addresses (address_line1 — fixed from old address_line)
 INSERT IGNORE INTO addresses (
-    address_line1,
-    address_line2,
-    city,
-    state_name,
-    country,
-    country_code,
-    postal_code
+    address_line1, address_line2,
+    city, state_name, country, country_code, postal_code
 )
 VALUES
     ('164 Seneca Pl', NULL, 'New York', 'NY', 'USA', 'US', '10001'),
@@ -41,51 +35,36 @@ VALUES
 
 -- Sample shipments
 INSERT IGNORE INTO shipments (
-    requestid,
-    application_id,
-    sender_customer_id,
-    receiver_customer_id,
-    from_address_id,
-    to_address_id,
-    service,
-    validation_status,
-    validation_reason,
-    state,
-    return_code,
-    return_json
+    requestid, application_id,
+    sender_customer_id, receiver_customer_id,
+    from_address_id, to_address_id,
+    service, validation_status, validation_reason,
+    state, return_code, return_json
 )
 VALUES
 (
-    'sample-001',
-    'deliveryhub-default',
+    'sample-001', 'deliveryhub-default',
     1, 2, 1, 2,
-    'Express International',
-    'valid', NULL, 'initiated', 200,
-    '{"status":"valid","message":"Shipment request accepted successfully"}'
+    'US_TO_INDIA_DOCUMENT_EXPRESS', 'valid', NULL,
+    'initiated', 200, '{"status":"valid"}'
 ),
 (
-    'sample-invalid-001',
-    'deliveryhub-default',
+    'sample-invalid-001', 'deliveryhub-default',
     1, 2, 1, 2,
-    'Express International',
-    'invalid', 'Invalid sender country code', 'initiated', 400,
-    '{"status":"invalid","reason":"Invalid sender country code"}'
+    'US_TO_INDIA_DOCUMENT_EXPRESS', 'invalid', 'Invalid sender country code',
+    'initiated', 400, '{"status":"invalid","reason":"Invalid sender country code"}'
 ),
 (
-    'sample-valid-002',
-    'app123',
+    'sample-valid-002', 'app123',
     1, 2, 1, 2,
-    'Standard',
-    'valid', NULL, 'assigned', 200,
-    '{"status":"valid","message":"Shipment request accepted successfully"}'
+    'INDIA_TO_US_DOCUMENT_EXPRESS', 'valid', NULL,
+    'assigned', 200, '{"status":"valid"}'
 ),
 (
-    'sample-invalid-phone',
-    'app123',
-    1, 2, 1, 2,
-    'Express International',
-    'invalid', 'Sender phone number missing', 'validation_failed', 400,
-    '{"status":"invalid","reason":"Sender phone number is required"}'
+    'sample-medicine-001', 'app123',
+    2, 1, 2, 1,
+    'INDIA_TO_US_MEDICINE_EXPRESS', 'valid', NULL,
+    'initiated', 200, '{"status":"valid"}'
 );
 
 
@@ -95,4 +74,4 @@ VALUES
     (1, 'initiated'),
     (2, 'validation_failed'),
     (3, 'assigned'),
-    (4, 'validation_failed');
+    (4, 'initiated');

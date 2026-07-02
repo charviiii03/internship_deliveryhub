@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Generator — DeliveryHub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root{--sidebar-bg:#0f172a;--sidebar-w:240px;--accent:#3b82f6;--accent-dark:#1d4ed8;--success:#10b981;--page-bg:#f1f5f9;--card-bg:#ffffff;--text-primary:#0f172a;--text-muted:#64748b;--border:#e2e8f0;--radius:14px;}
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Inter',sans-serif;background:var(--page-bg);color:var(--text-primary);display:flex;min-height:100vh;}
+
+        /* ── SIDEBAR ── */
+        .sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);min-height:100vh;display:flex;flex-direction:column;padding:24px 16px;position:fixed;top:0;left:0;z-index:100;}
+        .sidebar-brand{display:flex;align-items:center;gap:10px;padding:0 8px 28px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:20px;}
+        .brand-icon{width:38px;height:38px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:white;flex-shrink:0;}
+        .brand-name{font-size:15px;font-weight:700;color:white;line-height:1.2;}
+        .brand-sub{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:1px;text-transform:uppercase;}
+        .nav-label{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:1.2px;text-transform:uppercase;padding:0 12px;margin-bottom:8px;}
+        .nav-link-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:rgba(255,255,255,.6);text-decoration:none;font-size:14px;font-weight:500;margin-bottom:2px;transition:all .18s;}
+        .nav-link-item i{width:18px;text-align:center;font-size:13px;}
+        .nav-link-item:hover{background:rgba(255,255,255,.07);color:white;}
+        .nav-link-item.active{background:var(--accent);color:white;}
+
+        /* ── MAIN ── */
+        .main{margin-left:var(--sidebar-w);flex:1;padding:32px;min-width:0;}
+        .page-title{font-size:26px;font-weight:800;margin-bottom:4px;}
+        .page-subtitle{font-size:14px;color:var(--text-muted);margin-bottom:28px;}
+
+        /* ── LAYOUT ── */
+        .two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;}
+        .card-panel{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px;}
+        .section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+
+        /* ── FIELDS ── */
+        .field-group{margin-bottom:14px;}
+        .field-label{font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;display:block;}
+        .field-input,.field-select{width:100%;height:40px;border:1px solid var(--border);border-radius:9px;padding:0 12px;font-size:13px;font-family:'Inter',sans-serif;color:var(--text-primary);background:white;transition:border .15s;}
+        .field-input:focus,.field-select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.1);}
+        .field-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+        .field-grid-3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;}
+
+        /* ── ITEMS TABLE ── */
+        .items-table{width:100%;border-collapse:collapse;font-size:13px;}
+        .items-table th{background:#f8fafc;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;border-bottom:1px solid var(--border);font-weight:600;text-align:left;}
+        .items-table td{padding:8px 8px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+        .items-table td input,.items-table td select{width:100%;height:36px;border:1px solid var(--border);border-radius:7px;padding:0 8px;font-size:13px;font-family:'Inter',sans-serif;background:white;}
+        .items-table td input:focus,.items-table td select:focus{outline:none;border-color:var(--accent);}
+        .items-table .total-cell{font-weight:700;color:var(--text-primary);padding:8px 12px;}
+
+        .add-item-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;background:#eff6ff;border:1px solid #bfdbfe;color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:10px;}
+        .add-item-btn:hover{background:var(--accent);color:white;border-color:var(--accent);}
+
+        .remove-btn{background:#fee2e2;border:none;border-radius:6px;color:#ef4444;width:28px;height:28px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+        .remove-btn:hover{background:#ef4444;color:white;}
+
+        /* ── TOTALS ── */
+        .totals-box{background:#f8fafc;border-radius:10px;padding:16px 18px;margin-top:4px;}
+        .total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:14px;}
+        .total-row.grand{border-top:2px solid var(--border);margin-top:8px;padding-top:10px;font-weight:800;font-size:16px;color:var(--text-primary);}
+
+        /* ── BUTTONS ── */
+        .btn-row{display:flex;gap:12px;margin-top:8px;}
+        .preview-btn{flex:1;height:46px;background:white;color:var(--text-primary);border:1px solid var(--border);border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:'Inter',sans-serif;transition:all .18s;}
+        .preview-btn:hover{border-color:var(--accent);color:var(--accent);}
+        .download-btn{flex:1;height:46px;background:var(--text-primary);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:'Inter',sans-serif;transition:background .18s;}
+        .download-btn:hover{background:#1e293b;}
+
+        /* ── INVOICE PREVIEW ── */
+        #previewModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+        #previewModal.show{display:flex;}
+        .preview-box{background:white;border-radius:16px;width:100%;max-width:760px;max-height:90vh;overflow-y:auto;}
+        .preview-toolbar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);}
+        .preview-toolbar .title{font-weight:700;font-size:15px;}
+        .close-btn{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-muted);padding:4px;}
+        .close-btn:hover{color:var(--text-primary);}
+
+        /* Invoice document styles */
+        #invoiceDoc{padding:40px;font-family:'Inter',sans-serif;font-size:13px;color:#0f172a;}
+        .inv-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;}
+        .inv-brand{font-size:22px;font-weight:800;color:#0f172a;}
+        .inv-brand span{color:#3b82f6;}
+        .inv-meta{text-align:right;color:#64748b;font-size:12px;line-height:1.8;}
+        .inv-meta strong{color:#0f172a;font-size:14px;}
+        .inv-parties{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px;}
+        .inv-party-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#64748b;margin-bottom:6px;}
+        .inv-party-name{font-size:14px;font-weight:700;margin-bottom:4px;}
+        .inv-party-detail{font-size:12px;color:#64748b;line-height:1.6;}
+        .inv-table{width:100%;border-collapse:collapse;margin-bottom:24px;}
+        .inv-table th{background:#f8fafc;padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:600;border-bottom:2px solid #e2e8f0;}
+        .inv-table td{padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:13px;}
+        .inv-table tr:last-child td{border-bottom:none;}
+        .inv-totals{display:flex;justify-content:flex-end;margin-bottom:28px;}
+        .inv-totals-inner{width:260px;}
+        .inv-total-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#64748b;}
+        .inv-total-row.grand{border-top:2px solid #e2e8f0;margin-top:8px;padding-top:10px;font-weight:800;font-size:15px;color:#0f172a;}
+        .inv-footer{border-top:1px solid #e2e8f0;padding-top:20px;display:flex;justify-content:space-between;align-items:flex-end;}
+        .inv-purpose{font-size:12px;color:#64748b;}
+        .inv-purpose strong{color:#0f172a;display:block;margin-bottom:4px;}
+        .inv-sig{text-align:right;font-size:12px;color:#64748b;}
+        .inv-sig-line{border-top:1px solid #0f172a;width:180px;margin:40px 0 6px auto;}
+    </style>
+</head>
+<body>
+
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon"><i class="fa-solid fa-truck-fast"></i></div>
+        <div><div class="brand-name">DeliveryHub</div><div class="brand-sub">Admin Console</div></div>
+    </div>
+    <div class="nav-label">Menu</div>
+    <a href="/admin-ui" class="nav-link-item"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+    <a href="/admin-ui/applications" class="nav-link-item"><i class="fa-solid fa-building"></i> Applications</a>
+    <a href="/admin-ui/auth-logs" class="nav-link-item"><i class="fa-solid fa-shield-halved"></i> Auth Logs</a>
+    <a href="/admin-ui/shipments" class="nav-link-item"><i class="fa-solid fa-boxes-stacked"></i> Shipments</a>
+    <a href="/admin-ui/upload-label" class="nav-link-item"><i class="fa-solid fa-file-arrow-up"></i> Upload Label</a>
+    <a href="/admin-ui/invoice-generator" class="nav-link-item active"><i class="fa-solid fa-file-invoice"></i> Invoice Generator</a>
+</nav>
+
+<main class="main">
+    <div class="page-title">Invoice Generator</div>
+    <div class="page-subtitle">Create a commercial invoice for international shipments and download as PDF.</div>
+
+    <div class="two-col">
+
+        <!-- LEFT: Form -->
+        <div>
+
+            <!-- Invoice Details -->
+            <div class="card-panel">
+                <div class="section-label"><i class="fa-solid fa-file-invoice"></i> Invoice Details</div>
+                <div class="field-grid-2">
+                    <div class="field-group">
+                        <label class="field-label">Invoice Number</label>
+                        <input class="field-input" id="inv_number" placeholder="INV-2026-001">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Invoice Date</label>
+                        <input class="field-input" type="date" id="inv_date">
+                    </div>
+                </div>
+                <div class="field-grid-2">
+                    <div class="field-group">
+                        <label class="field-label">Shipment Reference</label>
+                        <input class="field-input" id="inv_ref" placeholder="e.g. REF-642609574772">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Tracking Number</label>
+                        <input class="field-input" id="inv_tracking" placeholder="e.g. 873067551984">
+                    </div>
+                </div>
+                <div class="field-grid-2">
+                    <div class="field-group">
+                        <label class="field-label">Currency</label>
+                        <select class="field-select" id="inv_currency">
+                            <option value="USD">USD — US Dollar</option>
+                            <option value="INR">INR — Indian Rupee</option>
+                            <option value="EUR">EUR — Euro</option>
+                            <option value="GBP">GBP — British Pound</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Purpose of Shipment</label>
+                        <select class="field-select" id="inv_purpose">
+                            <option value="Gift">Gift</option>
+                            <option value="Commercial Sample">Commercial Sample</option>
+                            <option value="Personal Use">Personal Use</option>
+                            <option value="Medicine">Medicine</option>
+                            <option value="Documents">Documents</option>
+                            <option value="Return / Repair">Return / Repair</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shipper -->
+            <div class="card-panel">
+                <div class="section-label"><i class="fa-solid fa-user"></i> Shipper (Sender)</div>
+                <div class="field-group">
+                    <label class="field-label">Full Name / Company</label>
+                    <input class="field-input" id="ship_name" placeholder="Naresh Kumar Bandaru">
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Address</label>
+                    <input class="field-input" id="ship_addr" placeholder="15845 Beckford CT">
+                </div>
+                <div class="field-grid-3">
+                    <div class="field-group">
+                        <label class="field-label">City</label>
+                        <input class="field-input" id="ship_city" placeholder="Lathrop">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">State</label>
+                        <input class="field-input" id="ship_state" placeholder="CA">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">ZIP</label>
+                        <input class="field-input" id="ship_zip" placeholder="95330">
+                    </div>
+                </div>
+                <div class="field-grid-2">
+                    <div class="field-group">
+                        <label class="field-label">Country</label>
+                        <input class="field-input" id="ship_country" placeholder="USA">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Phone</label>
+                        <input class="field-input" id="ship_phone" placeholder="+1 9254135958">
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Email</label>
+                    <input class="field-input" type="email" id="ship_email" placeholder="sender@example.com">
+                </div>
+            </div>
+
+            <!-- Consignee -->
+            <div class="card-panel">
+                <div class="section-label"><i class="fa-solid fa-location-dot"></i> Consignee (Receiver)</div>
+                <div class="field-group">
+                    <label class="field-label">Full Name / Company</label>
+                    <input class="field-input" id="cons_name" placeholder="Srinivas P">
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Address</label>
+                    <input class="field-input" id="cons_addr" placeholder="9-1-66 Ground Floor, Sarojini">
+                </div>
+                <div class="field-grid-3">
+                    <div class="field-group">
+                        <label class="field-label">City</label>
+                        <input class="field-input" id="cons_city" placeholder="Secunderabad">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">State</label>
+                        <input class="field-input" id="cons_state" placeholder="TS">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">PIN</label>
+                        <input class="field-input" id="cons_pin" placeholder="500003">
+                    </div>
+                </div>
+                <div class="field-grid-2">
+                    <div class="field-group">
+                        <label class="field-label">Country</label>
+                        <input class="field-input" id="cons_country" placeholder="India">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Phone</label>
+                        <input class="field-input" id="cons_phone" placeholder="+91 7075442230">
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Email</label>
+                    <input class="field-input" type="email" id="cons_email" placeholder="receiver@example.com">
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT: Items + Totals + Actions -->
+        <div>
+
+            <!-- Items -->
+            <div class="card-panel">
+                <div class="section-label"><i class="fa-solid fa-box"></i> Items / Contents</div>
+
+                <div style="overflow-x:auto;">
+                    <table class="items-table">
+                        <thead>
+                            <tr>
+                                <th style="width:35%">Description</th>
+                                <th style="width:10%">Qty</th>
+                                <th style="width:15%">Unit Value</th>
+                                <th style="width:12%">Weight (kg)</th>
+                                <th style="width:15%">Total</th>
+                                <th style="width:8%"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsBody">
+                            <!-- rows added by JS -->
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="6">
+                                    <button class="add-item-btn" onclick="addItem()">
+                                        <i class="fa-solid fa-plus"></i> Add Item
+                                    </button>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Totals -->
+            <div class="card-panel">
+                <div class="section-label"><i class="fa-solid fa-calculator"></i> Summary</div>
+                <div class="totals-box">
+                    <div class="total-row">
+                        <span>Subtotal</span>
+                        <span id="subtotal">0.00</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Total Weight</span>
+                        <span id="totalWeight">0.00 kg</span>
+                    </div>
+                    <div class="total-row grand">
+                        <span>Total Declared Value</span>
+                        <span id="grandTotal">USD 0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Signatory -->
+            <div class="card-panel">
+                <div class="section-label"><i class="fa-solid fa-signature"></i> Declaration</div>
+                <div class="field-group">
+                    <label class="field-label">Signatory Name</label>
+                    <input class="field-input" id="sig_name" placeholder="Authorised signatory name">
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Date of Signing</label>
+                    <input class="field-input" type="date" id="sig_date">
+                </div>
+                <p style="font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.6;">
+                    I declare that the information on this invoice is true and correct and that the contents and value of this shipment are as stated above.
+                </p>
+            </div>
+
+            <!-- Actions -->
+            <div class="btn-row">
+                <button class="preview-btn" onclick="previewInvoice()">
+                    <i class="fa-solid fa-eye"></i> Preview
+                </button>
+                <button class="download-btn" onclick="downloadPDF()">
+                    <i class="fa-solid fa-download"></i> Download PDF
+                </button>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<!-- Preview Modal -->
+<div id="previewModal">
+    <div class="preview-box">
+        <div class="preview-toolbar">
+            <span class="title"><i class="fa-solid fa-file-invoice me-2"></i>Invoice Preview</span>
+            <div style="display:flex;gap:10px;align-items:center;">
+                <button class="download-btn" style="height:36px;padding:0 16px;font-size:13px;" onclick="downloadPDF()">
+                    <i class="fa-solid fa-download"></i> Download
+                </button>
+                <button class="close-btn" onclick="closePreview()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+        <div id="invoiceDoc"></div>
+    </div>
+</div>
+
+<script>
+// ── Default date ──
+document.getElementById("inv_date").value  = new Date().toISOString().split("T")[0];
+document.getElementById("sig_date").value  = new Date().toISOString().split("T")[0];
+
+// Auto invoice number
+const pad = n => String(n).padStart(3,"0");
+document.getElementById("inv_number").value = `INV-${new Date().getFullYear()}-${pad(Math.floor(Math.random()*900)+100)}`;
+
+// ── Items ──
+let itemCount = 0;
+
+function addItem() {
+    itemCount++;
+    const tbody = document.getElementById("itemsBody");
+    const row = document.createElement("tr");
+    row.id = `item_${itemCount}`;
+    row.innerHTML = `
+        <td><input type="text"    placeholder="e.g. Medicine tablets" oninput="recalc()"></td>
+        <td><input type="number"  value="1" min="1" oninput="recalc()" style="text-align:center"></td>
+        <td><input type="number"  value="0" min="0" step="0.01" oninput="recalc()" style="text-align:right"></td>
+        <td><input type="number"  value="0" min="0" step="0.01" oninput="recalc()" style="text-align:center"></td>
+        <td class="total-cell" id="row_total_${itemCount}">0.00</td>
+        <td><button class="remove-btn" onclick="removeItem(${itemCount})"><i class="fa-solid fa-xmark"></i></button></td>
+    `;
+    tbody.appendChild(row);
+    recalc();
+}
+
+function removeItem(id) {
+    const row = document.getElementById(`item_${id}`);
+    if (row) row.remove();
+    recalc();
+}
+
+function recalc() {
+    let subtotal = 0, weight = 0;
+    const currency = document.getElementById("inv_currency").value;
+    document.querySelectorAll("#itemsBody tr").forEach(row => {
+        const inputs = row.querySelectorAll("input");
+        if (inputs.length < 4) return;
+        const qty  = parseFloat(inputs[1].value) || 0;
+        const unit = parseFloat(inputs[2].value) || 0;
+        const wt   = parseFloat(inputs[3].value) || 0;
+        const tot  = qty * unit;
+        const id   = row.id.replace("item_","");
+        const cell = document.getElementById(`row_total_${id}`);
+        if (cell) cell.textContent = tot.toFixed(2);
+        subtotal += tot;
+        weight   += wt * qty;
+    });
+    document.getElementById("subtotal").textContent    = subtotal.toFixed(2);
+    document.getElementById("totalWeight").textContent = weight.toFixed(2) + " kg";
+    document.getElementById("grandTotal").textContent  = `${currency} ${subtotal.toFixed(2)}`;
+}
+
+document.getElementById("inv_currency").addEventListener("change", recalc);
+
+// Add one row by default
+addItem();
+
+// ── Build invoice HTML ──
+function buildInvoiceHTML() {
+    const currency = document.getElementById("inv_currency").value;
+
+    // Collect items
+    let itemRows = "";
+    let subtotal = 0;
+    document.querySelectorAll("#itemsBody tr").forEach((row, idx) => {
+        const inputs = row.querySelectorAll("input");
+        if (inputs.length < 4) return;
+        const desc = inputs[0].value || "—";
+        const qty  = parseFloat(inputs[1].value) || 0;
+        const unit = parseFloat(inputs[2].value) || 0;
+        const wt   = parseFloat(inputs[3].value) || 0;
+        const tot  = qty * unit;
+        subtotal  += tot;
+        itemRows  += `<tr>
+            <td>${idx+1}</td>
+            <td>${desc}</td>
+            <td style="text-align:center">${qty}</td>
+            <td style="text-align:right">${unit.toFixed(2)}</td>
+            <td style="text-align:center">${wt.toFixed(2)}</td>
+            <td style="text-align:right;font-weight:600">${tot.toFixed(2)}</td>
+        </tr>`;
+    });
+
+    const weight = document.getElementById("totalWeight").textContent;
+
+    return `
+    <div id="invoiceDoc" style="padding:40px;font-family:Arial,sans-serif;font-size:13px;color:#0f172a;">
+
+        <!-- Header -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid #e2e8f0;">
+            <div>
+                <div style="font-size:22px;font-weight:800;margin-bottom:4px;">Delivery<span style="color:#3b82f6;">Hub</span></div>
+                <div style="font-size:12px;color:#64748b;">Commercial Invoice for International Shipment</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:18px;font-weight:800;color:#0f172a;">COMMERCIAL INVOICE</div>
+                <div style="font-size:12px;color:#64748b;margin-top:4px;">
+                    Invoice #: <strong style="color:#0f172a">${document.getElementById("inv_number").value || "—"}</strong><br>
+                    Date: <strong style="color:#0f172a">${document.getElementById("inv_date").value || "—"}</strong><br>
+                    Ref: ${document.getElementById("inv_ref").value || "—"}<br>
+                    Tracking: ${document.getElementById("inv_tracking").value || "—"}
+                </div>
+            </div>
+        </div>
+
+        <!-- Parties -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
+            <div style="background:#f8fafc;border-radius:10px;padding:16px;">
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#64748b;margin-bottom:8px;">Shipper / Exporter</div>
+                <div style="font-weight:700;font-size:14px;margin-bottom:4px;">${document.getElementById("ship_name").value || "—"}</div>
+                <div style="font-size:12px;color:#475569;line-height:1.7;">
+                    ${document.getElementById("ship_addr").value || ""}<br>
+                    ${document.getElementById("ship_city").value || ""}, ${document.getElementById("ship_state").value || ""} ${document.getElementById("ship_zip").value || ""}<br>
+                    ${document.getElementById("ship_country").value || ""}<br>
+                    ${document.getElementById("ship_phone").value || ""}<br>
+                    ${document.getElementById("ship_email").value || ""}
+                </div>
+            </div>
+            <div style="background:#f8fafc;border-radius:10px;padding:16px;">
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#64748b;margin-bottom:8px;">Consignee / Importer</div>
+                <div style="font-weight:700;font-size:14px;margin-bottom:4px;">${document.getElementById("cons_name").value || "—"}</div>
+                <div style="font-size:12px;color:#475569;line-height:1.7;">
+                    ${document.getElementById("cons_addr").value || ""}<br>
+                    ${document.getElementById("cons_city").value || ""}, ${document.getElementById("cons_state").value || ""} ${document.getElementById("cons_pin").value || ""}<br>
+                    ${document.getElementById("cons_country").value || ""}<br>
+                    ${document.getElementById("cons_phone").value || ""}<br>
+                    ${document.getElementById("cons_email").value || ""}
+                </div>
+            </div>
+        </div>
+
+        <!-- Shipment Info -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px;">
+            <div style="border:1px solid #e2e8f0;border-radius:8px;padding:12px;">
+                <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Purpose</div>
+                <div style="font-weight:600">${document.getElementById("inv_purpose").value}</div>
+            </div>
+            <div style="border:1px solid #e2e8f0;border-radius:8px;padding:12px;">
+                <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Currency</div>
+                <div style="font-weight:600">${currency}</div>
+            </div>
+            <div style="border:1px solid #e2e8f0;border-radius:8px;padding:12px;">
+                <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Total Weight</div>
+                <div style="font-weight:600">${weight}</div>
+            </div>
+        </div>
+
+        <!-- Items -->
+        <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+            <thead>
+                <tr style="background:#f8fafc;">
+                    <th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;border-bottom:2px solid #e2e8f0;">#</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;border-bottom:2px solid #e2e8f0;">Description</th>
+                    <th style="padding:10px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;border-bottom:2px solid #e2e8f0;">Qty</th>
+                    <th style="padding:10px 12px;text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;border-bottom:2px solid #e2e8f0;">Unit Value</th>
+                    <th style="padding:10px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;border-bottom:2px solid #e2e8f0;">Wt (kg)</th>
+                    <th style="padding:10px 12px;text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;border-bottom:2px solid #e2e8f0;">Total</th>
+                </tr>
+            </thead>
+            <tbody>${itemRows}</tbody>
+        </table>
+
+        <!-- Totals -->
+        <div style="display:flex;justify-content:flex-end;margin-bottom:28px;">
+            <div style="width:260px;">
+                <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#64748b;">
+                    <span>Subtotal</span><span>${subtotal.toFixed(2)}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:15px;font-weight:800;color:#0f172a;border-top:2px solid #e2e8f0;margin-top:6px;">
+                    <span>Total Declared Value</span><span>${currency} ${subtotal.toFixed(2)}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Declaration & Signature -->
+        <div style="border-top:1px solid #e2e8f0;padding-top:20px;">
+            <div style="font-size:12px;color:#475569;margin-bottom:24px;line-height:1.7;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:12px;">
+                <strong style="color:#0f172a;">Declaration:</strong> I declare that the information on this invoice is true and correct and that the contents and value of this shipment are as stated above.
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+                <div>
+                    <div style="font-size:11px;color:#64748b;margin-bottom:4px;">Purpose: ${document.getElementById("inv_purpose").value}</div>
+                    <div style="font-size:11px;color:#64748b;">Date: ${document.getElementById("sig_date").value || "—"}</div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="border-top:1px solid #0f172a;width:200px;margin:48px 0 6px auto;"></div>
+                    <div style="font-size:13px;font-weight:600;">${document.getElementById("sig_name").value || "Authorised Signatory"}</div>
+                    <div style="font-size:11px;color:#64748b;">Signature</div>
+                </div>
+            </div>
+        </div>
+
+    </div>`;
+}
+
+// ── Preview ──
+function previewInvoice() {
+    document.getElementById("invoiceDoc").innerHTML = buildInvoiceHTML();
+    document.getElementById("previewModal").classList.add("show");
+}
+
+function closePreview() {
+    document.getElementById("previewModal").classList.remove("show");
+}
+
+// Close modal on outside click
+document.getElementById("previewModal").addEventListener("click", function(e) {
+    if (e.target === this) closePreview();
+});
+
+// ── Download PDF using browser print ──
+function downloadPDF() {
+    const invoiceHTML = buildInvoiceHTML();
+    const printWindow = window.open("", "_blank", "width=800,height=900");
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Invoice ${document.getElementById("inv_number").value}</title>
+            <style>
+                * { box-sizing: border-box; margin: 0; padding: 0; }
+                body { font-family: Arial, sans-serif; }
+                @media print {
+                    @page { margin: 0; size: A4; }
+                    body { margin: 0; }
+                }
+            </style>
+        </head>
+        <body>${invoiceHTML}</body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+    }, 500);
+}
+</script>
+
+</body>
+</html>

@@ -1164,6 +1164,59 @@ def extract_tracking_number_from_pdf(file_path):
         return match.group(1).replace(" ", "")
 
     return None
+
+# --------------------------------------------------
+# ADMIN UI — INVOICE GENERATOR
+# Paste this into app_manager.py before:
+#   if __name__ == "__main__":
+# --------------------------------------------------
+
+@app.route("/admin-ui/invoice-generator")
+def admin_ui_invoice_generator():
+    return render_template("invoice_generator.html")
+
+
+@app.route("/admin-ui/invoice-generator/<int:shipment_id>")
+def admin_ui_invoice_from_shipment(shipment_id):
+    """
+    Opens the invoice generator pre-filled from an existing shipment.
+    """
+    conn = get_db_connection()
+    cur  = conn.cursor(dictionary=True)
+    cur.execute(
+        """SELECT s.shipment_id, s.requestid, s.service, s.tracking_number,
+                  sender.full_name    AS sender_name,
+                  sender.email        AS sender_email,
+                  sender.phone_number AS sender_phone,
+                  receiver.full_name  AS receiver_name,
+                  receiver.email      AS receiver_email,
+                  receiver.phone_number AS receiver_phone,
+                  fa.address_line1    AS from_address,
+                  fa.city             AS from_city,
+                  fa.state_name       AS from_state,
+                  fa.postal_code      AS from_postal,
+                  fa.country          AS from_country,
+                  ta.address_line1    AS to_address,
+                  ta.city             AS to_city,
+                  ta.state_name       AS to_state,
+                  ta.postal_code      AS to_postal,
+                  ta.country          AS to_country
+           FROM shipments s
+           JOIN customers sender    ON s.sender_customer_id   = sender.customer_id
+           JOIN customers receiver  ON s.receiver_customer_id = receiver.customer_id
+           JOIN addresses fa        ON s.from_address_id      = fa.address_id
+           JOIN addresses ta        ON s.to_address_id        = ta.address_id
+           WHERE s.shipment_id = %s""",
+        (shipment_id,)
+    )
+    shipment = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if not shipment:
+        return "Shipment not found", 404
+
+    return render_template("invoice_generator.html", shipment=shipment)
 # --------------------------------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True, port=5001)
